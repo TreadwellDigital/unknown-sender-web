@@ -90,11 +90,10 @@
   }
 
   /* -----------------------------------------------------------------
-     Home page: the sticky header is hidden entirely. Both the brand
-     mark and the nav live inside the hero as a composed unit (see
-     .hero-logo and .hero-nav in src/pages/index.astro). Users can
-     still navigate via the hero CTAs, the Explore cards below, and
-     the footer.
+     Hero pages (home + game detail): sticky header is hidden. The
+     brand mark and desktop nav live inside the hero as a composed
+     unit. Mobile nav is provided by MobileNav.astro (hamburger).
   ----------------------------------------------------------------- */
-  :global(body.home) .site-header { display: none; }
+  :global(body.home) .site-header,
+  :global(body.hero-page) .site-header { display: none; }
 </style>

@@ -6,9 +6,6 @@ import { getCollection, getEntry } from 'astro:content';
 import { formatPricePence, fetchGamesCatalogue, slugify } from '@/lib/pricing';
 
 export async function getStaticPaths() {
-  // Only build detail pages for live games. Coming-soon games appear on
-  // the /games index only, since they have no imagery, no price, and
-  // nothing to book yet.
   const games = await getCollection('games', ({ data }) => data.status === 'live');
   return games.map((game) => ({ params: { slug: game.slug }, props: { game } }));
 }
@@ -17,8 +14,6 @@ const { game } = Astro.props;
 const city = await getEntry('cities', game.data.citySlug);
 
 // Overlay live app data on top of Markdown-owned fields.
-// Site owns: tagline, hero images, price tiers (for now — until app has real prices).
-// App owns: description (mission briefing), what-to-expect bullets, location display name.
 const catalogue = await fetchGamesCatalogue();
 const apiGame = catalogue.find(
   (g) => g.slug === game.slug || slugify(g.name) === game.slug
@@ -29,9 +24,7 @@ const displayDescription = apiGame?.description ?? game.data.summary;
 const whatToExpect       = apiGame?.whatToExpectPoints ?? [];
 const displayCity        = apiGame?.location ?? city?.data.name ?? game.data.citySlug;
 
-// Booking window: before bookingsOpenAt, show a waitlist form; after
-// that moment, show the real Stripe booking flow. If bookingsOpenAt is
-// unset, bookings are open immediately.
+// Booking window
 const now = new Date();
 const bookingsOpen = !game.data.bookingsOpenAt
   || now >= new Date(game.data.bookingsOpenAt);
@@ -41,6 +34,10 @@ const openDateFormatted = game.data.bookingsOpenAt
     })
   : null;
 const waitlistUrl = import.meta.env.PUBLIC_BREVO_WAITLIST_URL ?? '';
+
+// Leaderboard: pass the app's UUID for this game to the client script.
+const appGameId = apiGame?.id ?? null;
+const appBaseUrl = import.meta.env.APP_BACKEND_URL ?? '';
 ---
 
 <BaseLayout
@@ -48,6 +45,7 @@ const waitlistUrl = import.meta.env.PUBLIC_BREVO_WAITLIST_URL ?? '';
   description={game.data.tagline}
   canonicalPath={`/games/${game.slug}`}
   ogImage={game.data.heroImageDesktop}
+  bodyClass="hero-page"
 >
   <article>
     <section class="hero">
@@ -55,6 +53,22 @@ const waitlistUrl = import.meta.env.PUBLIC_BREVO_WAITLIST_URL ?? '';
         <source media="(min-width: 768px)" srcset={game.data.heroImageDesktop} />
         <img src={game.data.heroImageMobile} alt={game.data.heroImageAlt} />
       </picture>
+
+      <!-- Brand mark + nav pinned inside the hero (same pattern as home) -->
+      <a href="/" class="hero-logo" aria-label="Unknown Sender home">
+        <img
+          src="/logo-640.png"
+          srcset="/logo-640.png 1x, /logo-trimmed.png 2x"
+          alt="Unknown Sender"
+          width="220"
+          height="107"
+        />
+      </a>
+      <nav class="hero-nav" aria-label="Primary">
+        <a href="/games">Case files</a>
+        <a href="/before-you-play">Before you play</a>
+      </nav>
+
       <div class="hero-overlay">
         <div class="wrap">
           <div class="eyebrow"><span class="dot"></span>{displayCity}</div>
@@ -90,6 +104,32 @@ const waitlistUrl = import.meta.env.PUBLIC_BREVO_WAITLIST_URL ?? '';
         </ul>
       </section>
     )}
+
+    <!-- ==========  Embedded leaderboard (top 10)  ========== -->
+    <section class="lb-inline wrap-narrow" id="leaderboard">
+      <div class="eyebrow"><span class="dot"></span>Leaderboard</div>
+      <h2>Fastest teams</h2>
+      <p class="lb-note">Top ten completions of {displayTitle}, sorted by fastest time.</p>
+
+      <div id="lb-inline-loading" class="lb-state">Loading&hellip;</div>
+      <table id="lb-inline-table" class="lb-table" hidden>
+        <thead>
+          <tr>
+            <th class="rank">#</th>
+            <th>Team</th>
+            <th class="right">Players</th>
+            <th class="right">Time</th>
+          </tr>
+        </thead>
+        <tbody id="lb-inline-body"></tbody>
+      </table>
+      <p id="lb-inline-empty" class="lb-state" hidden>No scores yet. Be the first.</p>
+      <p id="lb-inline-error" class="lb-state" hidden>Could not load leaderboard.</p>
+
+      <a href={`/games/${game.slug}/leaderboard`} class="btn btn-ghost lb-view-full">
+        View full leaderboard &rarr;
+      </a>
+    </section>
 
     {bookingsOpen ? (
       <section class="booking wrap-narrow" id="book">
@@ -164,8 +204,8 @@ const waitlistUrl = import.meta.env.PUBLIC_BREVO_WAITLIST_URL ?? '';
     )}
   </article>
 
-  <script define:vars={{ waitlistUrl }}>
-    // --- Booking button (present only when bookings are open) ---
+  <script define:vars={{ waitlistUrl, appGameId, appBaseUrl }}>
+    // --- Booking button ---
     const btn = document.getElementById('book-btn');
     if (btn) {
       btn.addEventListener('click', async () => {
@@ -202,7 +242,7 @@ const waitlistUrl = import.meta.env.PUBLIC_BREVO_WAITLIST_URL ?? '';
       });
     }
 
-    // --- Waitlist button (present only before bookings open) ---
+    // --- Waitlist button ---
     const waitlistBtn = document.getElementById('waitlist-btn');
     if (waitlistBtn) {
       waitlistBtn.addEventListener('click', async () => {
@@ -233,7 +273,6 @@ const waitlistUrl = import.meta.env.PUBLIC_BREVO_WAITLIST_URL ?? '';
             mode: 'no-cors',
             body: data,
           });
-          // Response is opaque under no-cors — treat completion as success.
           emailEl.style.display = 'none';
           waitlistBtn.style.display = 'none';
           successEl.hidden = false;
@@ -245,24 +284,87 @@ const waitlistUrl = import.meta.env.PUBLIC_BREVO_WAITLIST_URL ?? '';
         }
       });
     }
+
+    // --- Embedded leaderboard (top 10) ---
+    async function loadInlineLeaderboard() {
+      const loading = document.getElementById('lb-inline-loading');
+      const table   = document.getElementById('lb-inline-table');
+      const body    = document.getElementById('lb-inline-body');
+      const empty   = document.getElementById('lb-inline-empty');
+      const errorEl = document.getElementById('lb-inline-error');
+
+      loading.hidden = false;
+      table.hidden = true;
+      empty.hidden = true;
+      errorEl.hidden = true;
+
+      if (!appGameId || !appBaseUrl) {
+        loading.hidden = true;
+        errorEl.hidden = false;
+        return;
+      }
+
+      try {
+        const res = await fetch(
+          `${appBaseUrl}/api/leaderboard/${encodeURIComponent(appGameId)}?size=10`,
+          { headers: { accept: 'application/json' } }
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const rows = Array.isArray(data?.content) ? data.content : [];
+        loading.hidden = true;
+        if (rows.length === 0) { empty.hidden = false; return; }
+
+        body.innerHTML = rows.map((row) => {
+          const t = Number(row.scoreTimeSeconds) || 0;
+          const h = Math.floor(t / 3600);
+          const m = Math.floor((t % 3600) / 60).toString().padStart(2, '0');
+          const s = (t % 60).toString().padStart(2, '0');
+          const time = h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
+          const players = row.memberCount ?? '—';
+          return `
+            <tr>
+              <td class="rank">${row.rank ?? ''}</td>
+              <td>${escapeHtml(row.teamName ?? '')}</td>
+              <td class="right mono">${players}</td>
+              <td class="right mono">${time}</td>
+            </tr>
+          `;
+        }).join('');
+        table.hidden = false;
+      } catch (err) {
+        console.error('Leaderboard fetch failed:', err);
+        loading.hidden = true;
+        errorEl.hidden = false;
+      }
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[c]));
+    }
+    loadInlineLeaderboard();
   </script>
 </BaseLayout>
 
 <style>
+  /* ---------- HERO ---------- */
   .hero {
     position: relative;
     height: 70vh;
     min-height: 480px;
     overflow: hidden;
   }
-  .hero picture, .hero img {
+  .hero picture, .hero picture img {
     position: absolute; inset: 0;
     width: 100%; height: 100%;
     object-fit: cover;
+    z-index: 0;
   }
   .hero-overlay {
     position: absolute;
     inset: 0;
+    z-index: 2;
     display: flex;
     align-items: flex-end;
     background: linear-gradient(180deg, rgba(5,5,5,0.55), rgba(5,5,5,0.35) 30%, rgba(5,5,5,0.95));
@@ -282,6 +384,51 @@ const waitlistUrl = import.meta.env.PUBLIC_BREVO_WAITLIST_URL ?? '';
     line-height: 1.5;
   }
 
+  /* Brand mark pinned inside the hero (matches home page pattern) */
+  .hero-logo {
+    position: absolute;
+    top: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    display: block;
+    filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.6));
+    transition: transform 0.25s ease;
+  }
+  .hero-logo:hover { transform: translateX(-50%) translateY(-2px); }
+  .hero-logo img {
+    display: block;
+    height: 88px;
+    width: auto;
+  }
+
+  .hero-nav {
+    position: absolute;
+    top: 48px;
+    right: 40px;
+    z-index: 3;
+    display: flex;
+    gap: 22px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .hero-nav a {
+    color: rgba(245, 245, 245, 0.75);
+    text-decoration: none;
+    transition: color 0.15s;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+  }
+  .hero-nav a:hover { color: var(--ink); }
+
+  @media (max-width: 620px) {
+    .hero-nav { display: none; } /* mobile uses the hamburger overlay */
+    .hero-logo img { height: 68px; }
+    .hero-logo { top: 24px; }
+  }
+
+  /* ---------- META ---------- */
   .meta { padding: 40px 0; border-bottom: 1px solid var(--line); }
   .meta dl {
     display: grid;
@@ -298,6 +445,7 @@ const waitlistUrl = import.meta.env.PUBLIC_BREVO_WAITLIST_URL ?? '';
   }
   .meta dd { font-size: 16px; }
 
+  /* ---------- BODY / EXPECT ---------- */
   .body { padding-block: 60px 20px; }
   .body .eyebrow {
     display: block;
@@ -341,6 +489,77 @@ const waitlistUrl = import.meta.env.PUBLIC_BREVO_WAITLIST_URL ?? '';
     font-size: 14px;
   }
 
+  /* ---------- EMBEDDED LEADERBOARD ---------- */
+  .lb-inline { padding-block: 40px 20px; }
+  .lb-inline .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+    width: 100%;
+  }
+  .lb-inline h2 {
+    font-size: 24px;
+    margin-bottom: 6px;
+  }
+  .lb-note {
+    color: var(--ink-dim);
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+  .lb-state {
+    padding: 24px;
+    text-align: center;
+    color: var(--ink-dim);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+  .lb-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+    margin-bottom: 20px;
+  }
+  .lb-table th {
+    text-align: left;
+    padding: 10px 10px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    border-bottom: 1px solid var(--line);
+  }
+  .lb-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .lb-table .rank {
+    width: 34px;
+    color: var(--ink-dim);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .lb-table tbody tr:first-child .rank { color: var(--accent); }
+  .lb-table .right { text-align: right; }
+  .lb-table .mono {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-dim);
+  }
+  .lb-view-full {
+    display: inline-flex;
+    padding: 12px 20px;
+    font-size: 12px;
+  }
+
+  /* ---------- BOOKING / WAITLIST ---------- */
   .booking { padding-block: 40px 80px; }
   .booking h2 { font-size: 28px; margin: 16px 0 24px; }
 

@@ -16,34 +16,15 @@ const games = (await getCollection('games'))
   title="Unknown Sender — A city. A case. A sender you can't trust."
   description="A real-world, story-led mystery played on foot across the streets of Leeds."
   canonicalPath="/"
-  bodyClass="home"
+  bodyClass="home hero-page"
 >
-  <!-- =====================  HERO  =====================
-       Full-viewport video background with atmospheric overlay
-       and copy sitting on top. Drop your video files into
-       /public/videos/ and a poster still into /public/images/
-       and the hero renders itself. See notes at bottom of file.
-  ==================================================== -->
   <section class="hero">
-    <video
-      class="hero-video"
-      autoplay
-      loop
-      muted
-      playsinline
-      preload="metadata"
-      poster="/images/hero-poster.jpg"
-      aria-hidden="true"
-    >
-      <source src="/videos/hero-desktop.mp4" type="video/mp4" media="(min-width: 768px)" />
-      <source src="/videos/hero-mobile.mp4" type="video/mp4" />
-    </video>
-
-    <!-- Darkening + vignette overlay so overlay text stays legible -->
+    <!-- Background image (was a <video>; static image for now) -->
+    <div class="hero-image" aria-hidden="true"></div>
+    <!-- Vignette + darkening overlay so text stays legible -->
     <div class="hero-shade" aria-hidden="true"></div>
 
-    <!-- Brand mark + primary nav pinned inside the hero (the sticky
-         header is hidden on the home page — see Header.astro). -->
+    <!-- Brand mark, in normal flow at top of the flex column -->
     <a href="/" class="hero-logo" aria-label="Unknown Sender home">
       <img
         src="/logo-640.png"
@@ -53,11 +34,14 @@ const games = (await getCollection('games'))
         height="107"
       />
     </a>
+
+    <!-- Desktop nav, top-right (hamburger handles mobile via MobileNav component) -->
     <nav class="hero-nav" aria-label="Primary">
       <a href="/games">Case files</a>
       <a href="/before-you-play">Before you play</a>
     </nav>
 
+    <!-- Copy + CTAs pushed to bottom via margin-top: auto -->
     <div class="wrap hero-content">
       <div class="eyebrow"><span class="dot"></span>Leeds &nbsp;/&nbsp; Live now</div>
       <h1>A city.<br/>A case.<br/>A sender you can&rsquo;t trust.</h1>
@@ -157,27 +141,21 @@ const games = (await getCollection('games'))
   /* ---------- HERO ---------- */
   .hero {
     position: relative;
-    height: 100vh;
-    height: 100dvh;
-    min-height: 620px;
-    overflow: hidden;
+    min-height: 100dvh;
+    min-height: 100vh; /* fallback for older browsers */
     display: flex;
-    align-items: flex-end;
-    padding-bottom: 96px;
-    /* Sit under the sticky header (which fades) */
-    margin-top: calc(-96px);
-    padding-top: 120px;
+    flex-direction: column;
+    overflow: hidden;
   }
 
-  .hero-video {
+  .hero-image {
     position: absolute;
     inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
     z-index: 0;
-    /* Fallback background if the video hasn't loaded / doesn't exist */
-    background: linear-gradient(180deg, #0a0a0a 0%, #050505 100%);
+    background-image: url('/images/hero-poster.jpg');
+    background-size: cover;
+    background-position: center;
+    background-color: #0a0a0a;
   }
 
   .hero-shade {
@@ -190,38 +168,28 @@ const games = (await getCollection('games'))
     pointer-events: none;
   }
 
-  .hero-content {
-    position: relative;
-    z-index: 2;
-  }
-
-  /* Pinned brand mark + nav inside the hero.
-     Sticky header is hidden on this page, so both live here. `top`
-     compensates for the hero's -96px margin-top (which lets the hero
-     image extend behind where the sticky header would otherwise sit)
-     plus a bit of comfortable padding from the viewport top. */
+  /* Logo: in flex flow, at the top, centred horizontally */
   .hero-logo {
-    position: absolute;
-    top: calc(96px + 32px);
-    left: 50%;
-    transform: translateX(-50%);
+    position: relative;
     z-index: 3;
+    align-self: center;
+    margin-top: 40px;
+    padding: 0 20px;
     display: block;
     filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.6));
     transition: transform 0.25s ease;
   }
-  .hero-logo:hover {
-    transform: translateX(-50%) translateY(-2px);
-  }
+  .hero-logo:hover { transform: translateY(-2px); }
   .hero-logo img {
     display: block;
-    height: 116px;
+    height: 108px;
     width: auto;
   }
 
+  /* Desktop nav, top-right corner */
   .hero-nav {
     position: absolute;
-    top: calc(96px + 32px + 46px);  /* align roughly with logo vertical centre */
+    top: 48px;
     right: 40px;
     z-index: 3;
     display: flex;
@@ -239,9 +207,12 @@ const games = (await getCollection('games'))
   }
   .hero-nav a:hover { color: var(--ink); }
 
-  @media (max-width: 620px) {
-    .hero-nav { display: none; } /* TODO: mobile drawer in v1.1 */
-    .hero-logo img { height: 96px; }
+  /* Content pushed to bottom by margin-top: auto in the flex column */
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    margin-top: auto;
+    padding-bottom: 96px;
   }
 
   .hero h1 {
@@ -272,7 +243,7 @@ const games = (await getCollection('games'))
   /* Scroll hint at bottom of hero */
   .scroll-hint {
     position: absolute;
-    bottom: 28px;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 3;
@@ -298,6 +269,16 @@ const games = (await getCollection('games'))
     50% { transform: translateY(4px); opacity: 1; }
   }
 
+  @media (max-width: 620px) {
+    .hero-nav { display: none; } /* mobile uses the hamburger overlay */
+    .hero-logo { margin-top: 28px; }
+    .hero-logo img { height: 76px; }
+    .hero-content { padding-bottom: 80px; }
+    .hero h1 { margin-top: 16px; }
+    .hero .lede { margin-top: 20px; font-size: 16px; }
+    .cta-row { margin-top: 28px; }
+  }
+
   /* ---------- EXPLORE ---------- */
   .explore {
     padding: 100px 0;
@@ -320,7 +301,6 @@ const games = (await getCollection('games'))
   .explore-grid {
     display: grid;
     gap: 24px;
-    /* Auto layout: one big card when only one game; grid when more */
     grid-template-columns: 1fr;
   }
   @media (min-width: 900px) {
@@ -443,23 +423,4 @@ const games = (await getCollection('games'))
     color: var(--ink-dim);
     transition: color 0.2s;
   }
-
-  @media (max-width: 620px) {
-    .hero { padding-bottom: 80px; }
-    .scroll-hint { bottom: 20px; font-size: 10px; }
-  }
-
-  /* -----------------------------------------------------
-     ASSETS TO ADD
-     -----------------------------------------------------
-     public/videos/hero-desktop.mp4  (landscape, ~1080p, ~10-20s loop, muted)
-     public/videos/hero-mobile.mp4   (portrait, ~720p, same loop cropped)
-     public/images/hero-poster.jpg   (first-frame still, shown before video loads)
-     public/images/last-call-hero-mobile.jpg   (portrait, ~1200x900)
-     public/images/last-call-hero-desktop.jpg  (landscape, ~1920x1080)
-
-     Keep videos short (10-20s), heavily compressed (H.264 baseline,
-     ~1-2 MB each). No audio track at all — muted+autoplay only works
-     on mobile if the file itself has no audio stream.
-  ----------------------------------------------------- */
 </style>

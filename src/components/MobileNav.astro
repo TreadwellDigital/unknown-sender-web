@@ -1,0 +1,195 @@
+---
+/**
+ * MobileNav — hamburger button (top-right, fixed) that opens a
+ * full-screen nav overlay. Visible on mobile only.
+ *
+ * Rendered globally via BaseLayout, so it works on every page —
+ * including hero pages that hide the sticky header.
+ */
+---
+
+<button
+  id="mnav-toggle"
+  class="mnav-toggle"
+  aria-label="Open menu"
+  aria-controls="mnav-overlay"
+  aria-expanded="false"
+>
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
+
+<div id="mnav-overlay" class="mnav-overlay" aria-hidden="true">
+  <button id="mnav-close" class="mnav-close" aria-label="Close menu">&times;</button>
+
+  <nav class="mnav-links" aria-label="Mobile primary">
+    <a href="/">Home</a>
+    <a href="/games">Case files</a>
+    <a href="/before-you-play">Before you play</a>
+    <a href="/info">Info</a>
+    <a href="/refunds">Refunds</a>
+    <a href="/privacy">Privacy</a>
+    <a href="/terms">Terms</a>
+  </nav>
+
+  <div class="mnav-footer">
+    <span>&copy; Unknown Sender</span>
+  </div>
+</div>
+
+<script>
+  const toggle  = document.getElementById('mnav-toggle');
+  const overlay = document.getElementById('mnav-overlay');
+  const close   = document.getElementById('mnav-close');
+  const links   = overlay?.querySelectorAll('a');
+
+  function open() {
+    overlay?.classList.add('open');
+    toggle?.classList.add('open');
+    toggle?.setAttribute('aria-expanded', 'true');
+    overlay?.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+  function shut() {
+    overlay?.classList.remove('open');
+    toggle?.classList.remove('open');
+    toggle?.setAttribute('aria-expanded', 'false');
+    overlay?.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  toggle?.addEventListener('click', () => {
+    overlay?.classList.contains('open') ? shut() : open();
+  });
+  close?.addEventListener('click', shut);
+  links?.forEach((a) => a.addEventListener('click', shut));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') shut();
+  });
+</script>
+
+<style>
+  /* Hidden on desktop */
+  .mnav-toggle,
+  .mnav-overlay {
+    display: none;
+  }
+
+  @media (max-width: 620px) {
+    .mnav-toggle {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 1001;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border: 1px solid var(--line-strong);
+      border-radius: 12px;
+      background: rgba(5, 5, 5, 0.65);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .mnav-toggle:hover { background: rgba(20, 20, 20, 0.85); }
+
+    .mnav-toggle span {
+      display: block;
+      width: 20px;
+      height: 2px;
+      background: var(--ink);
+      border-radius: 1px;
+      transition: transform 0.25s ease, opacity 0.2s ease;
+    }
+
+    /* Hamburger → X when open */
+    .mnav-toggle.open span:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+    .mnav-toggle.open span:nth-child(2) {
+      opacity: 0;
+    }
+    .mnav-toggle.open span:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+
+    .mnav-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: rgba(5, 5, 5, 0.98);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .mnav-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .mnav-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: var(--ink);
+      font-size: 32px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+      opacity: 0;   /* the hamburger button itself is the visible close when open */
+      pointer-events: none;
+    }
+
+    .mnav-links {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .mnav-links a {
+      display: block;
+      padding: 14px 20px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--ink-dim);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .mnav-links a:hover { color: var(--ink); }
+
+    .mnav-footer {
+      position: absolute;
+      bottom: 32px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+  }
+</style>
