@@ -1,7 +1,7 @@
 ---
 title: The Eldritch Paradox
 citySlug: leeds
-tagline: Something ancient is bleeding through the cracks in Leeds. Follow the disturbances through a city where reality can't be trusted.
+tagline: Across Leeds, a pattern is emerging between people who have never met. Follow it to the source and discover why they were chosen.
 summary: Coming soon.
 heroImageMobile: /images/the-eldritch-paradox-hero.jpg
 heroImageDesktop: /images/the-eldritch-paradox-hero.jpg
