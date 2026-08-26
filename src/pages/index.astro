@@ -5,7 +5,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import { getCollection, getEntry } from 'astro:content';
 import { formatPricePence } from '@/lib/pricing';
 
-// All games — the map below renders live ones as bookable cards and
+// All games, the map below renders live ones as bookable cards and
 // coming-soon ones as dimmed teasers. Sorted by `order` so Last Call
 // always leads.
 const games = (await getCollection('games'))
@@ -13,7 +13,7 @@ const games = (await getCollection('games'))
 ---
 
 <BaseLayout
-  title="Unknown Sender — A city. A case. A sender you can't trust."
+  title="Unknown Sender, A city. A case. A sender you can't trust."
   description="A real-world, story-led mystery played on foot across the streets of Leeds."
   canonicalPath="/"
   bodyClass="home hero-page"
@@ -67,8 +67,8 @@ const games = (await getCollection('games'))
     <div class="wrap">
       <div class="explore-head">
         <div class="eyebrow">Case files</div>
-        <h2>Four cases. One city.</h2>
-        <p class="explore-sub">Last Call is only the beginning.</p>
+        <h2>Every city leaves something unsolved.</h2>
+        <p class="explore-sub">Every case begins with a message.</p>
       </div>
 
       <div class="explore-grid">

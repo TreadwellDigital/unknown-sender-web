@@ -5,7 +5,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 ---
 
 <BaseLayout
-  title="Booking confirmed — Unknown Sender"
+  title="Booking confirmed, Unknown Sender"
   description="Your booking is confirmed."
   canonicalPath="/checkout/success"
 >
@@ -41,7 +41,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
   <script>
     // Post-checkout: Stripe redirected here with ?session_id=cs_...
     // We look up the booking in Supabase (already created by the webhook).
-    // If the webhook hasn't fired yet — race condition, ~1s window — we retry.
+    // If the webhook hasn't fired yet, race condition, ~1s window, we retry.
     async function loadCode() {
       const el = document.getElementById('booking-code');
       const url = new URL(window.location.href);
