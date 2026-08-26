@@ -281,10 +281,13 @@ const games = (await getCollection('games'))
 
   /* ---------- EXPLORE ---------- */
   .explore {
-    padding: 100px 0;
+    padding: 60px 0 32px;
     background:
       radial-gradient(ellipse at 50% 0%, rgba(225,20,20,0.06) 0%, transparent 60%),
       var(--bg);
+  }
+  @media (max-width: 620px) {
+    .explore { padding: 40px 0 24px; }
   }
 
   .explore-head { margin-bottom: 44px; max-width: 640px; }
