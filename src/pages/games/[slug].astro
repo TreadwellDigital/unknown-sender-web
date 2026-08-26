@@ -74,6 +74,11 @@ const appBaseUrl = import.meta.env.APP_BACKEND_URL ?? '';
           <div class="eyebrow"><span class="dot"></span>{displayCity}</div>
           <h1>{displayTitle}</h1>
           <p class="tagline">{game.data.tagline}</p>
+          <div class="hero-cta">
+            <a href="#book" class="btn btn-primary">
+              {bookingsOpen ? `Book ${displayTitle}` : 'Join waitlist'} &rarr;
+            </a>
+          </div>
         </div>
       </div>
     </section>
@@ -104,32 +109,6 @@ const appBaseUrl = import.meta.env.APP_BACKEND_URL ?? '';
         </ul>
       </section>
     )}
-
-    <!-- ==========  Embedded leaderboard (top 10)  ========== -->
-    <section class="lb-inline wrap-narrow" id="leaderboard">
-      <div class="eyebrow"><span class="dot"></span>Leaderboard</div>
-      <h2>Fastest teams</h2>
-      <p class="lb-note">Top ten completions of {displayTitle}, sorted by fastest time.</p>
-
-      <div id="lb-inline-loading" class="lb-state">Loading&hellip;</div>
-      <table id="lb-inline-table" class="lb-table" hidden>
-        <thead>
-          <tr>
-            <th class="rank">#</th>
-            <th>Team</th>
-            <th class="right">Players</th>
-            <th class="right">Time</th>
-          </tr>
-        </thead>
-        <tbody id="lb-inline-body"></tbody>
-      </table>
-      <p id="lb-inline-empty" class="lb-state" hidden>No scores yet. Be the first.</p>
-      <p id="lb-inline-error" class="lb-state" hidden>Could not load leaderboard.</p>
-
-      <a href={`/games/${game.slug}/leaderboard`} class="btn btn-ghost lb-view-full">
-        View full leaderboard &rarr;
-      </a>
-    </section>
 
     {bookingsOpen ? (
       <section class="booking wrap-narrow" id="book">
@@ -202,6 +181,32 @@ const appBaseUrl = import.meta.env.APP_BACKEND_URL ?? '';
         </p>
       </section>
     )}
+
+    <!-- ==========  Embedded leaderboard (top 10)  ========== -->
+    <section class="lb-inline wrap-narrow" id="leaderboard">
+      <div class="eyebrow"><span class="dot"></span>Leaderboard</div>
+      <h2>Fastest teams</h2>
+      <p class="lb-note">Top ten completions of {displayTitle}, sorted by fastest time.</p>
+
+      <div id="lb-inline-loading" class="lb-state">Loading&hellip;</div>
+      <table id="lb-inline-table" class="lb-table" hidden>
+        <thead>
+          <tr>
+            <th class="rank">#</th>
+            <th>Team</th>
+            <th class="right">Players</th>
+            <th class="right">Time</th>
+          </tr>
+        </thead>
+        <tbody id="lb-inline-body"></tbody>
+      </table>
+      <p id="lb-inline-empty" class="lb-state" hidden>No scores yet. Be the first.</p>
+      <p id="lb-inline-error" class="lb-state" hidden>Could not load leaderboard.</p>
+
+      <a href={`/games/${game.slug}/leaderboard`} class="btn btn-ghost lb-view-full">
+        View full leaderboard &rarr;
+      </a>
+    </section>
   </article>
 
   <script define:vars={{ waitlistUrl, appGameId, appBaseUrl }}>
@@ -382,6 +387,12 @@ const appBaseUrl = import.meta.env.APP_BACKEND_URL ?? '';
     color: var(--ink);
     font-size: 18px;
     line-height: 1.5;
+  }
+  .hero-cta {
+    margin-top: 28px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
   }
 
   /* Brand mark pinned inside the hero (matches home page pattern) */
