@@ -1,0 +1,148 @@
+---
+export const prerender = true;
+
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Terms & Conditions — Unknown Sender"
+  description="Terms and conditions for using the Unknown Sender website and taking part in the experience."
+  canonicalPath="/terms"
+>
+  <article class="page">
+    <div class="wrap-narrow">
+      <div class="eyebrow">Legal</div>
+      <h1>Terms &amp; Conditions</h1>
+      <div class="updated">Last updated: August 2026</div>
+
+      <section>
+        <p>These terms govern your use of the Unknown Sender website, the Unknown Sender mobile
+          app, and your participation in any Unknown Sender experience. By using this website,
+          the app, or booking a ticket, you agree to these terms.</p>
+        <p>Unknown Sender is operated by <strong>Treadwell21</strong>, a company registered in
+          England and Wales, company number <strong>16996311</strong>, with registered address at
+          71&ndash;75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom.
+          Contact: <a href="mailto:hello@unknownsender.co.uk">hello@unknownsender.co.uk</a>.</p>
+      </section>
+
+      <section>
+        <h2>About the experience</h2>
+        <p>Unknown Sender is a real-world, story-led mystery played on foot through a UK city.
+          Players receive messages, images and other content through the Unknown Sender app on
+          their phone, and follow clues through real streets and venues. Sessions last
+          approximately 90&ndash;120 minutes.</p>
+        <p>Participation requires:</p>
+        <ul>
+          <li>A smartphone (iOS or Android) capable of installing the Unknown Sender app,
+            available on the {/* TODO: swap "#" for real store URLs once live */}
+            <a href="#" rel="noopener">App Store</a> and
+            <a href="#" rel="noopener">Google Play</a>.</li>
+          <li>An active mobile data connection for the duration of the session.</li>
+          <li>Sufficient battery to complete the session (we recommend at least 80% at start,
+            and bringing a portable battery).</li>
+          <li>The ability to walk and stand for the full session.</li>
+        </ul>
+        <p>Players are responsible for their own safety, including observing traffic rules and
+          the law at all times. See our <a href="/before-you-play">Before you play</a> brief.</p>
+      </section>
+
+      <section>
+        <h2>Eligibility</h2>
+        <p>Players must be 18 years of age or over. By booking, you confirm that you and every
+          member of your team meet this age requirement.</p>
+      </section>
+
+      <section>
+        <h2>Tickets and bookings</h2>
+        <p>Tickets are sold through this website in pounds sterling (GBP), processed by Stripe.
+          A booking is confirmed once payment has been received and a confirmation email issued.
+          Each ticket is valid for 90 days from purchase and can be redeemed once.</p>
+      </section>
+
+      <section>
+        <h2>Refunds and cancellations</h2>
+        <p>See our <a href="/refunds">Refund Policy</a>. Briefly: full refund within 14 days of
+          purchase if you haven&rsquo;t started; transfers to another player allowed any time within
+          the 90-day validity window; once started, tickets are non-refundable.</p>
+      </section>
+
+      <section>
+        <h2>Conduct during the experience</h2>
+        <p>Players must behave lawfully and respectfully towards other players, members of the
+          public, and staff at any venues featured in the experience. We reserve the right to
+          terminate a session, without refund, if a player behaves in a way that is unsafe,
+          abusive, or that puts the experience or other people at risk.</p>
+      </section>
+
+      <section>
+        <h2>Personal property</h2>
+        <p>You are responsible for your own belongings during the experience. Unknown Sender is
+          not responsible for any theft, loss or damage to personal property. See
+          <a href="/before-you-play">Before you play</a> for practical guidance.</p>
+      </section>
+
+      <section>
+        <h2>Leaderboards</h2>
+        <p>By completing a session you agree that your team name and score may be displayed on
+          the public leaderboard for that game. No personal information beyond team name is
+          published. You can request removal from the leaderboard at any time by email.</p>
+      </section>
+
+      <section>
+        <h2>Intellectual property</h2>
+        <p>All content on this website and within the experience, text, images, narrative,
+          software, is the property of Treadwell21 unless otherwise stated. You may not copy,
+          reproduce or commercially exploit any part of it without our written permission.</p>
+      </section>
+
+      <section>
+        <h2>Liability</h2>
+        <p>The experience takes place in real public spaces. We are not responsible for the
+          actions of third parties or for events outside our reasonable control. Nothing in these
+          terms limits or excludes our liability for death or personal injury caused by our
+          negligence, for fraud, or for any other liability that cannot lawfully be limited or
+          excluded.</p>
+      </section>
+
+      <section>
+        <h2>Complaints</h2>
+        <p>If something has gone wrong, please tell us so we can put it right. Email
+          <a href="mailto:hello@unknownsender.co.uk">hello@unknownsender.co.uk</a> with a
+          short description of what happened and your booking code where applicable. We aim to
+          acknowledge complaints within two working days and to resolve them within ten working
+          days.</p>
+        <p>If we&rsquo;re unable to resolve your complaint to your satisfaction, you may have the
+          right to refer it to an Alternative Dispute Resolution (ADR) provider, or to take it
+          to the county court. Nothing in this process affects your statutory rights under UK
+          consumer law.</p>
+      </section>
+
+      <section>
+        <h2>Governing law</h2>
+        <p>These terms are governed by the laws of England and Wales, and any disputes will be
+          subject to the exclusive jurisdiction of the courts of England and Wales.</p>
+      </section>
+
+      <section>
+        <h2>Changes to these terms</h2>
+        <p>We may update these terms from time to time. The date at the top of the page indicates
+          when they were last changed.</p>
+      </section>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .page { padding: 80px 0; }
+  h1 { font-size: clamp(2rem, 5vw, 3rem); margin: 12px 0 12px; }
+  .updated { color: var(--ink-dim); font-family: var(--font-mono); font-size: 12px; margin-bottom: 40px; }
+  section { margin-bottom: 32px; }
+  h2 {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.22em;
+    color: var(--ink-dim); text-transform: uppercase; font-weight: 500;
+    margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line);
+  }
+  p { margin-bottom: 12px; font-size: 15.5px; line-height: 1.65; }
+  a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+</style>

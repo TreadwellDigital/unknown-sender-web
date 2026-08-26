@@ -1,0 +1,23 @@
+# Build output
+dist/
+.astro/
+
+# Dependencies
+node_modules/
+
+# Local env files (NEVER commit real secrets)
+.env
+.env.local
+.env.production
+.dev.vars
+
+# Cloudflare / Wrangler
+.wrangler/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp

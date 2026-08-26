@@ -1,0 +1,98 @@
+---
+export const prerender = true;
+
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Information — Unknown Sender"
+  description="Practical information about Unknown Sender, the operator, and how to get in touch."
+  canonicalPath="/info"
+>
+  <article class="page">
+    <div class="wrap-narrow">
+      <div class="eyebrow">Information</div>
+      <h1>About Unknown Sender</h1>
+
+      <p class="lede">
+        Unknown Sender is a real-world, story-led mystery experience played on foot across
+        UK cities. Players receive messages on their phone, follow clues through real streets
+        and venues, and work together as a small team to uncover what happened.
+      </p>
+
+      <section>
+        <h2>Currently playing</h2>
+        <dl>
+          <div><dt>Game</dt><dd>Last Call</dd></div>
+          <div><dt>City</dt><dd>Leeds city centre, United Kingdom</dd></div>
+          <div><dt>Duration</dt><dd>Approximately 90&ndash;120 minutes</dd></div>
+          <div><dt>Format</dt><dd>Outdoor walking experience, played through the Unknown Sender app on iOS and Android</dd></div>
+          <div><dt>Team size</dt><dd>Up to 6 players</dd></div>
+          <div><dt>Age</dt><dd>18+</dd></div>
+        </dl>
+      </section>
+
+      <section>
+        <h2>Tickets</h2>
+        <p>Tickets are sold in pounds sterling (GBP) via Stripe. Three team sizes:</p>
+        <ul>
+          <li><strong>Team of 1&ndash;2, £40</strong></li>
+          <li><strong>Team of 3&ndash;4, £70</strong></li>
+          <li><strong>Team of 5&ndash;6, £90</strong></li>
+        </ul>
+        <p>Each ticket is valid for 90 days from purchase and can be redeemed at any time within
+          that window. See our <a href="/refunds">Refund Policy</a> for cancellations and transfers.</p>
+      </section>
+
+      <section>
+        <h2>Contact &amp; support</h2>
+        <p>The quickest way to reach us during a game is by <strong>WhatsApp</strong>, you can
+          send messages, voice notes or screenshots as you play. For anything less urgent,
+          email is best.</p>
+        {/* TODO: add WhatsApp number once set up */}
+        <ul>
+          <li><strong>Email:</strong> <a href="mailto:hello@unknownsender.co.uk">hello@unknownsender.co.uk</a>, we aim to respond within two working days</li>
+          <li><strong>WhatsApp:</strong> details in your booking confirmation</li>
+          <li><strong>Phone:</strong> <a href="tel:+443308806072">0330 880 6072</a>, UK local-rate number, not staffed 24/7 (WhatsApp or email is quickest)</li>
+        </ul>
+        <p>In a genuine emergency, always call <strong>999</strong>.</p>
+      </section>
+
+      <section>
+        <h2>Operator</h2>
+        <p>Unknown Sender is operated by <strong>Treadwell21</strong>, a company registered
+          in England and Wales, company number <strong>16996311</strong>.</p>
+        <p>Registered address: 71&ndash;75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom.</p>
+      </section>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .page { padding: 80px 0; }
+  h1 { font-size: clamp(2rem, 5vw, 3rem); margin: 12px 0 28px; }
+  .lede { color: var(--ink); font-size: 17px; line-height: 1.7; margin-bottom: 48px; max-width: 620px; }
+
+  section { margin-bottom: 40px; }
+  h2 {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.22em;
+    color: var(--ink-dim); text-transform: uppercase; font-weight: 500;
+    margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line);
+  }
+  p { margin-bottom: 12px; font-size: 15.5px; line-height: 1.65; }
+  ul { padding-left: 20px; margin-bottom: 12px; }
+  li { margin-bottom: 6px; font-size: 15.5px; }
+  a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+
+  dl { display: grid; grid-template-columns: 140px 1fr; row-gap: 10px; column-gap: 18px; font-size: 15px; }
+  dt {
+    font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--ink-dim); padding-top: 3px;
+  }
+  dd { color: var(--ink); }
+  @media (max-width: 520px) {
+    dl { grid-template-columns: 1fr; row-gap: 4px; }
+    dt { padding-top: 10px; }
+  }
+</style>

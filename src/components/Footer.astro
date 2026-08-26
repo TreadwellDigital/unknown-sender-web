@@ -1,0 +1,110 @@
+---
+/**
+ * Footer — sits at the bottom of every page.
+ * Legal + safety links, plus the cookies preferences trigger.
+ */
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="col">
+      <span class="brand-line">
+        <span class="dot"></span>
+        Unknown Sender
+      </span>
+      <p class="muted">A real-world mystery,<br/>played across UK cities.</p>
+    </div>
+
+    <nav class="links" aria-label="Footer">
+      <a href="/info">Info</a>
+      <a href="/before-you-play">Before you play</a>
+      <a href="/refunds">Refunds</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="#" data-cookie-prefs>Cookies</a>
+    </nav>
+  </div>
+
+  <div class="wrap credit">
+    <span>&copy; {year} Unknown Sender</span>
+    <span>Made in the UK</span>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: 80px;
+    padding: 40px 0 32px;
+    border-top: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .site-footer .wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px 40px;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .col { max-width: 240px; }
+
+  .brand-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .brand-line .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+
+  .muted {
+    margin-top: 12px;
+    color: var(--ink-dim);
+    letter-spacing: 0.06em;
+    text-transform: none;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px 22px;
+    max-width: 460px;
+  }
+
+  .links a {
+    color: var(--ink-dim);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .links a:hover { color: var(--ink); }
+
+  .credit {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 520px) {
+    .credit { flex-direction: column; gap: 8px; }
+  }
+</style>

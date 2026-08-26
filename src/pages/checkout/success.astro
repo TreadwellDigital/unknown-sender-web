@@ -1,0 +1,117 @@
+---
+export const prerender = true;
+
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Booking confirmed — Unknown Sender"
+  description="Your booking is confirmed."
+  canonicalPath="/checkout/success"
+>
+  <section class="page">
+    <div class="wrap-narrow">
+      <div class="eyebrow"><span class="dot"></span>Confirmed</div>
+      <h1>Message received.</h1>
+      <p class="lede">
+        Your booking is in. We&rsquo;ve sent a confirmation to your inbox with
+        everything you need to play.
+      </p>
+
+      <div class="code-box">
+        <div class="code-label">Your booking code</div>
+        <div class="code" id="booking-code">Loading&hellip;</div>
+        <p class="code-note">Save this. You&rsquo;ll enter it when you start.</p>
+      </div>
+
+      <div class="next">
+        <div class="eyebrow">Before you play</div>
+        <ul>
+          <li>Read the <a href="/before-you-play">safety brief</a>. It&rsquo;s short.</li>
+          <li>Check the weather. Wear shoes you can walk in.</li>
+          <li>Have a phone with mobile data and enough battery for two hours.</li>
+        </ul>
+        <p class="actions">
+          <a class="btn btn-ghost" href="/before-you-play">Read the brief</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Post-checkout: Stripe redirected here with ?session_id=cs_...
+    // We look up the booking in Supabase (already created by the webhook).
+    // If the webhook hasn't fired yet — race condition, ~1s window — we retry.
+    async function loadCode() {
+      const el = document.getElementById('booking-code');
+      const url = new URL(window.location.href);
+      const sessionId = url.searchParams.get('session_id');
+      if (!sessionId) { el.textContent = '—'; return; }
+
+      // TODO: hit /api/booking-by-session/[sessionId] once implemented
+      // For now, show "check your email" fallback.
+      el.textContent = 'Check your email';
+    }
+    loadCode();
+  </script>
+</BaseLayout>
+
+<style>
+  .page { padding: 100px 0; }
+  h1 { font-size: clamp(2.4rem, 6vw, 3.5rem); margin: 20px 0 16px; letter-spacing: -0.03em; }
+  .lede { color: var(--ink-dim); font-size: 17px; line-height: 1.6; margin-bottom: 48px; max-width: 480px; }
+
+  .code-box {
+    padding: 32px;
+    border: 1px solid var(--line-strong);
+    border-radius: 14px;
+    background: var(--panel);
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .code-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .code {
+    font-family: var(--font-mono);
+    font-size: 32px;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .code-note {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--ink-dim);
+  }
+
+  .next .eyebrow { margin-bottom: 20px; }
+  .next ul {
+    list-style: none;
+    display: grid;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .next li {
+    padding-left: 20px;
+    position: relative;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .next li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 12px;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+  .next a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+  .actions { margin-top: 24px; }
+</style>

@@ -1,0 +1,100 @@
+---
+/**
+ * Header — the tag/logo top-left, minimal nav top-right.
+ * Sticky-transparent by default; individual pages can override.
+ */
+---
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="/" class="brand" aria-label="Unknown Sender home">
+      <img
+        src="/logo-640.png"
+        srcset="/logo-640.png 1x, /logo-trimmed.png 2x"
+        alt="Unknown Sender"
+        width="132"
+        height="64"
+      />
+    </a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/games">Case files</a>
+      <a href="/before-you-play">Before you play</a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: linear-gradient(180deg, rgba(5,5,5,0.85), rgba(5,5,5,0.55) 70%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .site-header .wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    gap: 24px;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--ink);
+    /* subtle lift so the tag reads as a physical object */
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+    transition: transform 0.2s ease;
+  }
+
+  .brand:hover {
+    color: var(--ink);
+    transform: translateY(-1px);
+  }
+
+  .brand img {
+    display: block;
+    height: 64px;
+    width: auto;
+  }
+
+  .nav {
+    display: flex;
+    gap: 22px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+
+  .nav a {
+    text-decoration: none;
+    color: var(--ink-dim);
+    transition: color 0.15s;
+  }
+
+  .nav a:hover { color: var(--ink); }
+
+  @media (max-width: 620px) {
+    .nav { display: none; } /* TODO: mobile drawer in v1.1 */
+    /* No nav to balance against on mobile — centre the logo and give it
+       real presence so it reads as the brand mark, not a corner sticker. */
+    .site-header .wrap { justify-content: center; }
+    .brand img { height: 76px; }
+  }
+
+  /* -----------------------------------------------------------------
+     Home page: the sticky header is hidden entirely. Both the brand
+     mark and the nav live inside the hero as a composed unit (see
+     .hero-logo and .hero-nav in src/pages/index.astro). Users can
+     still navigate via the hero CTAs, the Explore cards below, and
+     the footer.
+  ----------------------------------------------------------------- */
+  :global(body.home) .site-header { display: none; }
+</style>

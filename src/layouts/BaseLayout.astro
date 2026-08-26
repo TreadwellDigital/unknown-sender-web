@@ -1,0 +1,125 @@
+---
+/**
+ * BaseLayout — shared HTML shell for every page.
+ *
+ * Wires in:
+ *  - Meta, viewport, canonical, theme colour, favicons, OG defaults
+ *  - Google Consent Mode v2 defaults (default-deny)
+ *  - Google Tag Manager (head + noscript)
+ *  - Cookie consent banner (consent.js loaded from /public)
+ *  - Fonts (Inter, JetBrains Mono)
+ *  - Global CSS
+ *  - Site header + footer
+ *
+ * Per-page usage:
+ *   <BaseLayout title="..." description="..." canonicalPath="/games/last-call">
+ *     ...page content...
+ *   </BaseLayout>
+ */
+
+import '@/styles/global.css';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  canonicalPath?: string;
+  ogImage?: string;
+  bodyClass?: string;
+}
+
+const {
+  title,
+  description = 'A real-world mystery, played across UK cities.',
+  canonicalPath,
+  ogImage = '/images/og-default.jpg',
+  bodyClass,
+} = Astro.props;
+
+const siteUrl = import.meta.env.PUBLIC_SITE_URL ?? 'https://unknownsender.co.uk';
+const canonical = canonicalPath ? `${siteUrl}${canonicalPath}` : siteUrl;
+const ogImageUrl = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`;
+const GTM_ID = 'GTM-NR8WBMD5';
+---
+
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+
+  <!-- Google Consent Mode v2 — default deny until user opts in.
+       MUST come before the GTM snippet so tags start in 'denied' state. -->
+  <script is:inline>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('consent', 'default', {
+      'ad_storage': 'denied',
+      'ad_user_data': 'denied',
+      'ad_personalization': 'denied',
+      'analytics_storage': 'denied',
+      'wait_for_update': 500
+    });
+  </script>
+
+  <!-- Google Tag Manager -->
+  <script is:inline>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-NR8WBMD5');</script>
+  <!-- End Google Tag Manager -->
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="generator" content={Astro.generator} />
+
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+
+  <meta name="theme-color" content="#050505" />
+  <meta name="color-scheme" content="dark" />
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+
+  <!-- Open Graph / social -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Unknown Sender" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:image" content={ogImageUrl} />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Cookie consent banner (also pushes gtag consent updates) -->
+  <script defer src="/consent.js"></script>
+</head>
+
+<body class={bodyClass}>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+
+  <div class="grain"></div>
+
+  <Header />
+
+  <main>
+    <slot />
+  </main>
+
+  <Footer />
+</body>
+</html>

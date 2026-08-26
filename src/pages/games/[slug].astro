@@ -1,0 +1,428 @@
+---
+export const prerender = true;
+
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getCollection, getEntry } from 'astro:content';
+import { formatPricePence, fetchGamesCatalogue, slugify } from '@/lib/pricing';
+
+export async function getStaticPaths() {
+  // Only build detail pages for live games. Coming-soon games appear on
+  // the /games index only, since they have no imagery, no price, and
+  // nothing to book yet.
+  const games = await getCollection('games', ({ data }) => data.status === 'live');
+  return games.map((game) => ({ params: { slug: game.slug }, props: { game } }));
+}
+
+const { game } = Astro.props;
+const city = await getEntry('cities', game.data.citySlug);
+
+// Overlay live app data on top of Markdown-owned fields.
+// Site owns: tagline, hero images, price tiers (for now — until app has real prices).
+// App owns: description (mission briefing), what-to-expect bullets, location display name.
+const catalogue = await fetchGamesCatalogue();
+const apiGame = catalogue.find(
+  (g) => g.slug === game.slug || slugify(g.name) === game.slug
+);
+
+const displayTitle       = apiGame?.name ?? game.data.title;
+const displayDescription = apiGame?.description ?? game.data.summary;
+const whatToExpect       = apiGame?.whatToExpectPoints ?? [];
+const displayCity        = apiGame?.location ?? city?.data.name ?? game.data.citySlug;
+
+// Booking window: before bookingsOpenAt, show a waitlist form; after
+// that moment, show the real Stripe booking flow. If bookingsOpenAt is
+// unset, bookings are open immediately.
+const now = new Date();
+const bookingsOpen = !game.data.bookingsOpenAt
+  || now >= new Date(game.data.bookingsOpenAt);
+const openDateFormatted = game.data.bookingsOpenAt
+  ? new Date(game.data.bookingsOpenAt).toLocaleDateString('en-GB', {
+      day: 'numeric', month: 'long', year: 'numeric',
+    })
+  : null;
+const waitlistUrl = import.meta.env.PUBLIC_BREVO_WAITLIST_URL ?? '';
+---
+
+<BaseLayout
+  title={`${displayTitle} — Unknown Sender`}
+  description={game.data.tagline}
+  canonicalPath={`/games/${game.slug}`}
+  ogImage={game.data.heroImageDesktop}
+>
+  <article>
+    <section class="hero">
+      <picture>
+        <source media="(min-width: 768px)" srcset={game.data.heroImageDesktop} />
+        <img src={game.data.heroImageMobile} alt={game.data.heroImageAlt} />
+      </picture>
+      <div class="hero-overlay">
+        <div class="wrap">
+          <div class="eyebrow"><span class="dot"></span>{displayCity}</div>
+          <h1>{displayTitle}</h1>
+          <p class="tagline">{game.data.tagline}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="meta">
+      <div class="wrap">
+        <dl>
+          <div><dt>Duration</dt><dd>{game.data.duration}</dd></div>
+          <div><dt>Team size</dt><dd>Up to {Math.max(...game.data.priceTiers.map((t) => t.maxPlayers))}</dd></div>
+          <div><dt>Age</dt><dd>{game.data.ageMin}+</dd></div>
+          <div><dt>Valid for</dt><dd>{game.data.validityDays} days from purchase</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="body wrap-narrow">
+      <div class="eyebrow">Mission briefing</div>
+      <p class="briefing">{displayDescription}</p>
+    </section>
+
+    {whatToExpect.length > 0 && (
+      <section class="expect wrap-narrow">
+        <div class="eyebrow">What to expect</div>
+        <ul>
+          {whatToExpect.map((point) => (
+            <li>{point}</li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    {bookingsOpen ? (
+      <section class="booking wrap-narrow" id="book">
+        <div class="eyebrow">Book</div>
+        <h2>Choose your team size</h2>
+
+        <div class="tiers" data-game-slug={game.slug}>
+          {game.data.priceTiers.map((tier) => (
+            <label class="tier">
+              <input type="radio" name="tier" value={tier.id} data-price-pence={tier.pricePence} />
+              <div class="tier-label">
+                <div>
+                  <div class="tier-name">{tier.label}</div>
+                  <div class="tier-note">Up to {tier.maxPlayers} players</div>
+                </div>
+                <div class="tier-price">{formatPricePence(tier.pricePence)}</div>
+              </div>
+            </label>
+          ))}
+        </div>
+
+        <label class="field">
+          <span>Team name</span>
+          <input type="text" name="teamName" id="teamName" maxlength="50" placeholder="e.g. The Suspects" />
+        </label>
+
+        <label class="field">
+          <span>Your email</span>
+          <input type="email" name="email" id="email" placeholder="you@example.com" />
+        </label>
+
+        <button type="button" class="btn btn-primary book-btn" id="book-btn">
+          Book &rarr;
+        </button>
+
+        <p class="fine">
+          By booking you agree to our <a href="/terms">Terms</a> and
+          confirm you&rsquo;ve read <a href="/before-you-play">Before you play</a>.
+          See our <a href="/refunds">refund policy</a>.
+        </p>
+      </section>
+    ) : (
+      <section class="booking wrap-narrow" id="book">
+        <div class="eyebrow">Waitlist</div>
+        <h2>Get notified when bookings open.</h2>
+
+        {openDateFormatted && (
+          <p class="waitlist-note">
+            Bookings for {displayTitle} open <strong>{openDateFormatted}</strong>.
+            Drop your email and we&rsquo;ll message you the moment they do.
+          </p>
+        )}
+
+        <label class="field">
+          <span>Your email</span>
+          <input type="email" id="waitlist-email" placeholder="you@example.com" />
+        </label>
+
+        <button type="button" class="btn btn-primary book-btn" id="waitlist-btn">
+          Notify me &rarr;
+        </button>
+
+        <div class="waitlist-success" id="waitlist-success" hidden>
+          You&rsquo;re on the list. Watch your inbox.
+        </div>
+
+        <p class="fine">
+          One-off email, only for launch notification.
+          See our <a href="/privacy">privacy policy</a>.
+        </p>
+      </section>
+    )}
+  </article>
+
+  <script define:vars={{ waitlistUrl }}>
+    // --- Booking button (present only when bookings are open) ---
+    const btn = document.getElementById('book-btn');
+    if (btn) {
+      btn.addEventListener('click', async () => {
+        const gameSlug = document.querySelector('.tiers')?.dataset.gameSlug;
+        const tier = document.querySelector('input[name="tier"]:checked')?.value;
+        const teamName = document.getElementById('teamName').value.trim();
+        const email = document.getElementById('email').value.trim();
+
+        if (!tier)     { alert('Pick a team size.'); return; }
+        if (!teamName) { alert('Enter a team name.'); return; }
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          alert('Enter a valid email.');
+          return;
+        }
+
+        btn.setAttribute('disabled', 'true');
+        btn.innerText = 'Redirecting…';
+
+        try {
+          const res = await fetch('/api/create-checkout-session', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ gameSlug, tierId: tier, teamName, email }),
+          });
+          const data = await res.json();
+          if (!res.ok || !data.url) throw new Error(data.error ?? 'Checkout failed');
+          window.location.href = data.url;
+        } catch (err) {
+          console.error(err);
+          alert('Could not start checkout. Try again in a moment.');
+          btn.removeAttribute('disabled');
+          btn.innerText = 'Book →';
+        }
+      });
+    }
+
+    // --- Waitlist button (present only before bookings open) ---
+    const waitlistBtn = document.getElementById('waitlist-btn');
+    if (waitlistBtn) {
+      waitlistBtn.addEventListener('click', async () => {
+        const emailEl   = document.getElementById('waitlist-email');
+        const successEl = document.getElementById('waitlist-success');
+        const email     = emailEl.value.trim();
+
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          alert('Enter a valid email.');
+          return;
+        }
+        if (!waitlistUrl) {
+          alert('Waitlist not configured yet. Please check back soon.');
+          return;
+        }
+
+        waitlistBtn.setAttribute('disabled', 'true');
+        waitlistBtn.innerText = 'Adding…';
+
+        try {
+          const data = new FormData();
+          data.append('EMAIL', email);
+          data.append('email_address_check', '');
+          data.append('locale', 'en');
+          data.append('html_type', 'simple');
+          await fetch(waitlistUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: data,
+          });
+          // Response is opaque under no-cors — treat completion as success.
+          emailEl.style.display = 'none';
+          waitlistBtn.style.display = 'none';
+          successEl.hidden = false;
+        } catch (err) {
+          console.error(err);
+          alert('Something went wrong. Try again.');
+          waitlistBtn.removeAttribute('disabled');
+          waitlistBtn.innerText = 'Notify me →';
+        }
+      });
+    }
+  </script>
+</BaseLayout>
+
+<style>
+  .hero {
+    position: relative;
+    height: 70vh;
+    min-height: 480px;
+    overflow: hidden;
+  }
+  .hero picture, .hero img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    background: linear-gradient(180deg, rgba(5,5,5,0.55), rgba(5,5,5,0.35) 30%, rgba(5,5,5,0.95));
+    padding-bottom: 40px;
+  }
+  .hero h1 {
+    font-size: clamp(2.8rem, 8vw, 5rem);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-top: 18px;
+  }
+  .tagline {
+    max-width: 620px;
+    margin-top: 20px;
+    color: var(--ink);
+    font-size: 18px;
+    line-height: 1.5;
+  }
+
+  .meta { padding: 40px 0; border-bottom: 1px solid var(--line); }
+  .meta dl {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 24px;
+  }
+  .meta dt {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .meta dd { font-size: 16px; }
+
+  .body { padding-block: 60px 20px; }
+  .body .eyebrow {
+    display: block;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .briefing {
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--ink);
+    white-space: pre-line;
+  }
+
+  .expect { padding-block: 40px 20px; }
+  .expect .eyebrow {
+    display: block;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .expect ul {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 14px;
+  }
+  .expect li {
+    position: relative;
+    padding-left: 22px;
+    font-size: 15.5px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .expect li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--accent);
+    font-size: 14px;
+  }
+
+  .booking { padding-block: 40px 80px; }
+  .booking h2 { font-size: 28px; margin: 16px 0 24px; }
+
+  .tiers { display: grid; gap: 12px; margin-bottom: 32px; }
+  .tier { display: block; cursor: pointer; }
+  .tier input { position: absolute; opacity: 0; pointer-events: none; }
+  .tier-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 22px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel);
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .tier input:checked + .tier-label {
+    border-color: var(--accent);
+    background: rgba(225,20,20,0.06);
+  }
+  .tier-name { font-size: 16px; font-weight: 600; }
+  .tier-note {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .tier-price { font-size: 22px; font-weight: 600; }
+
+  .field { display: block; margin-bottom: 18px; }
+  .field span {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin-bottom: 8px;
+  }
+  .field input {
+    width: 100%;
+    padding: 14px 18px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+  }
+  .field input:focus { outline: none; border-color: var(--accent); }
+
+  .book-btn { width: 100%; margin-top: 12px; padding: 18px; font-size: 14px; }
+
+  .fine {
+    margin-top: 16px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--ink-dim);
+    text-align: center;
+  }
+  .fine a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+
+  .waitlist-note {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink-dim);
+    margin-bottom: 28px;
+    max-width: 520px;
+  }
+  .waitlist-note strong { color: var(--ink); }
+
+  .waitlist-success {
+    margin-top: 20px;
+    padding: 18px 22px;
+    background: rgba(225, 20, 20, 0.06);
+    border: 1px solid rgba(225, 20, 20, 0.28);
+    border-radius: 12px;
+    color: var(--ink);
+    font-size: 15px;
+    text-align: center;
+  }
+</style>

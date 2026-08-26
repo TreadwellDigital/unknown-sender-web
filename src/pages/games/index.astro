@@ -1,0 +1,223 @@
+---
+export const prerender = true;
+
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { formatPricePence } from '@/lib/pricing';
+
+const games = (await getCollection('games'))
+  .sort((a, b) => a.data.order - b.data.order);
+---
+
+<BaseLayout
+  title="Case files — Unknown Sender"
+  description="Every case currently open, and every one being written next."
+  canonicalPath="/games"
+>
+  <section class="page">
+    <div class="wrap">
+      <div class="explore-head">
+        <div class="eyebrow">Case files</div>
+        <h1>Four cases. One city.</h1>
+        <p class="sub">Last Call is only the beginning.</p>
+      </div>
+
+      <div class="explore-grid">
+        {games.map((g) => {
+          const isLive = g.data.status === 'live';
+          const cheapest = isLive
+            ? [...g.data.priceTiers].sort((a, b) => a.pricePence - b.pricePence)[0]
+            : null;
+
+          if (isLive) {
+            return (
+              <a class="feature" href={`/games/${g.slug}`}>
+                <div class="feature-media">
+                  <picture>
+                    <source media="(min-width: 768px)" srcset={g.data.heroImageDesktop} />
+                    <img src={g.data.heroImageMobile} alt={g.data.heroImageAlt} loading="lazy" />
+                  </picture>
+                  <div class="feature-shade"></div>
+                </div>
+                <div class="feature-body">
+                  <div class="feature-eye">
+                    <span class="live-dot"></span>{g.data.citySlug} &nbsp;/&nbsp; Live now
+                  </div>
+                  <h3>{g.data.title}</h3>
+                  <p class="feature-tag">{g.data.tagline}</p>
+                  <div class="feature-meta">
+                    <span class="feature-price">From {formatPricePence(cheapest!.pricePence)}</span>
+                    <span class="feature-cta">Explore &rarr;</span>
+                  </div>
+                </div>
+              </a>
+            );
+          }
+
+          return (
+            <div class="feature coming">
+              {g.data.heroImageDesktop ? (
+                <div class="feature-media">
+                  <picture>
+                    <source media="(min-width: 768px)" srcset={g.data.heroImageDesktop} />
+                    <img src={g.data.heroImageMobile ?? g.data.heroImageDesktop} alt={g.data.heroImageAlt ?? g.data.title} loading="lazy" />
+                  </picture>
+                  <div class="feature-shade"></div>
+                </div>
+              ) : (
+                <div class="feature-media placeholder" aria-hidden="true">
+                  <div class="feature-shade"></div>
+                </div>
+              )}
+              <div class="feature-body">
+                <div class="feature-eye muted">
+                  {g.data.citySlug} &nbsp;/&nbsp; Coming soon
+                </div>
+                <h3>{g.data.title}</h3>
+                <p class="feature-tag">{g.data.tagline}</p>
+                <div class="feature-meta">
+                  <span class="feature-price">Soon</span>
+                  <span class="feature-cta">&mdash;</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page { padding-block: 80px; }
+
+  .explore-head { margin-bottom: 44px; max-width: 640px; }
+  .explore-head h1 { margin: 18px 0 12px; font-size: clamp(2rem, 5vw, 3rem); }
+  .sub { color: var(--ink-dim); font-size: 16px; line-height: 1.6; }
+
+  .explore-grid {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 900px) {
+    .explore-grid {
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    }
+  }
+
+  .feature {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--ink);
+    background: var(--panel);
+    transition: transform 0.25s ease, border-color 0.25s ease;
+  }
+  a.feature:hover {
+    transform: translateY(-3px);
+    border-color: var(--line-strong);
+    color: var(--ink);
+  }
+  a.feature:hover .feature-cta { color: var(--accent); }
+  a.feature:hover .feature-media img { transform: scale(1.03); }
+
+  .feature.coming { cursor: default; }
+  .feature.coming .feature-body { opacity: 0.75; }
+
+  .feature-media {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: linear-gradient(135deg, #111 0%, #050505 100%);
+  }
+  .feature-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s ease;
+  }
+  .feature-media.placeholder {
+    background:
+      radial-gradient(ellipse at 30% 40%, rgba(225,20,20,0.1), transparent 60%),
+      radial-gradient(ellipse at 70% 70%, rgba(255,255,255,0.03), transparent 60%),
+      linear-gradient(135deg, #0d0d0d 0%, #050505 100%);
+  }
+  .feature-shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 40%, rgba(5,5,5,0.7) 100%);
+    pointer-events: none;
+  }
+
+  .feature-body { padding: 26px 28px 28px; }
+
+  .feature-eye {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin-bottom: 14px;
+  }
+  .feature-eye.muted { color: var(--ink-faint); }
+  .feature-eye .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  .feature h3 {
+    font-size: clamp(1.7rem, 3vw, 2.2rem);
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+  }
+
+  .feature-tag {
+    color: var(--ink-dim);
+    font-size: 15px;
+    line-height: 1.55;
+    max-width: 460px;
+    margin-bottom: 22px;
+  }
+
+  .feature-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+  }
+
+  .feature-price {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+  }
+
+  .feature-cta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    transition: color 0.2s;
+  }
+</style>

@@ -1,0 +1,124 @@
+---
+export const prerender = true;
+
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Before you play — Unknown Sender"
+  description="Plain-English brief for players: what to bring, what to wear, how to stay safe."
+  canonicalPath="/before-you-play"
+>
+  <article class="page">
+    <div class="wrap-narrow">
+      <div class="eyebrow"><span class="dot"></span>Brief</div>
+      <h1>Before you play.</h1>
+      <p class="lede">
+        Unknown Sender takes place in real streets. This page is short. Please read it
+        before you set out.
+      </p>
+
+      <section>
+        <h2>Weather</h2>
+        <p>The game runs outdoors. Check the forecast before you set your start time. If
+          it looks miserable, reschedule, your ticket is valid for 90 days from purchase,
+          so you don&rsquo;t have to play the day you buy.</p>
+      </section>
+
+      <section>
+        <h2>What to wear</h2>
+        <p>Comfortable shoes you can walk 3&ndash;5 kilometres in. A jacket if there&rsquo;s any chance of rain.
+          Dark trousers or trainers you don&rsquo;t mind getting a little dirty, some of the story takes
+          you through alleyways and cobbles.</p>
+      </section>
+
+      <section>
+        <h2>What to bring</h2>
+        <ul>
+          <li>A smartphone with the <strong>Unknown Sender app</strong> installed (iOS or Android)
+            and signed in with the email you booked with.</li>
+          <li>Mobile data enabled for the duration of the session.</li>
+          <li>At least 80% battery at the start.</li>
+          <li>A portable battery if you have one, the game runs 90&ndash;120 minutes.</li>
+          <li>Cash or card for a drink or two along the way (not required).</li>
+          <li>Water.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Staying safe</h2>
+        <p>The game will never ask you to enter private property, climb anything, cross a
+          road anywhere other than a legal crossing, or approach strangers. If any instruction
+          seems to suggest otherwise, you&rsquo;ve misread it, message us on WhatsApp
+          (details in your booking confirmation) and we&rsquo;ll help.</p>
+        <p>Cross roads only at proper crossings, obey traffic signals, and don&rsquo;t use your
+          phone while walking near roads. Stick with your team.</p>
+        <p>You are playing at your own pace. If anywhere feels unsafe, unwelcoming or you
+          simply want to stop, do, the game will still be there tomorrow.</p>
+      </section>
+
+      <section>
+        <h2>Your belongings</h2>
+        <p>Keep your phone, wallet and any bags on you at all times. Don&rsquo;t leave anything
+          unattended in bars, doorways or on benches. Unknown Sender is not responsible for
+          any theft, loss or damage to personal property during the experience.</p>
+      </section>
+
+      <section>
+        <h2>Age &amp; drinking</h2>
+        <p>Players must be 18 or over. Some of the game passes through pubs and bars. You are
+          welcome to have a drink; you are not required to. If a member of your team is unable
+          to safely continue for any reason, stop and get them home, the story can wait.</p>
+      </section>
+
+      <section>
+        <h2>If something goes wrong</h2>
+        <p>In a genuine emergency, always call <strong>999</strong>.</p>
+        <p>For anything game-related, a broken link, a clue that isn&rsquo;t appearing, a
+          location that&rsquo;s closed, or you&rsquo;re just stuck, the quickest way to reach us is
+          <strong>WhatsApp</strong>. You can send messages, voice notes, screenshots or your
+          location. Details are in your booking confirmation email. Email
+          <a href="mailto:hello@unknownsender.co.uk">hello@unknownsender.co.uk</a> works too if
+          you prefer, though replies won&rsquo;t be as immediate.</p>
+      </section>
+
+      <p class="closing">
+        By starting a session you confirm you&rsquo;ve read this page. See also our
+        <a href="/terms">Terms</a> and <a href="/refunds">Refund Policy</a>.
+      </p>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .page { padding: 80px 0; }
+  h1 { font-size: clamp(2.4rem, 6vw, 3.5rem); margin: 20px 0 20px; letter-spacing: -0.03em; }
+  .lede { color: var(--ink-dim); font-size: 17px; line-height: 1.6; margin-bottom: 48px; max-width: 580px; }
+
+  section { margin-bottom: 40px; }
+  h2 {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  p { margin-bottom: 12px; font-size: 15.5px; line-height: 1.65; color: var(--ink); }
+  ul { padding-left: 20px; margin-bottom: 12px; }
+  li { margin-bottom: 6px; font-size: 15.5px; line-height: 1.55; }
+
+  a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+
+  .closing {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    color: var(--ink-dim);
+    font-size: 14px;
+  }
+</style>
