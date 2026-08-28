@@ -17,7 +17,7 @@ const { game } = Astro.props;
 // to /api/games. Falls back to null if the app is unreachable at build.
 const catalogue = await fetchGamesCatalogue();
 const apiGame = catalogue.find(
-  (g) => g.slug === game.slug || slugify(g.name) === game.slug
+  (g) => g.siteId === game.slug || slugify(g.name) === game.slug
 );
 const appGameId = apiGame?.id ?? null;
 const appBaseUrl = import.meta.env.APP_BACKEND_URL ?? '';

@@ -21,14 +21,27 @@ export interface LiveTier {
   label: string;
   minPlayers: number;
   maxPlayers: number;
-  /** Price in pence, stored as a float by the app (e.g. 30.0 = £0.30) */
+  /**
+   * Price value from the app API. Unit still worth confirming with the
+   * app team: appears to be in POUNDS now (40.0 = £40), previously was
+   * pence-as-float (30.0 = £0.30). Currently the site uses Markdown
+   * `pricePence` for display, so this field isn't rendered yet.
+   */
   price: number;
-  /** OPTIONAL — Stripe price_id. Requested addition (see API_CONTRACT.md) */
+  /**
+   * The app doesn't expose Stripe price IDs — payments are created as
+   * inline Payment Intents. Field kept optional in case that ever changes.
+   */
   stripePriceId?: string;
 }
 
 export interface LiveGame {
   id: string;
+  /**
+   * URL-safe identifier used by the site to match its route (`/games/last-call`)
+   * to the app's game record. App team added this field on their side.
+   */
+  siteId: string;
   name: string;
   description: string;
   location: string;
@@ -36,10 +49,6 @@ export interface LiveGame {
   longitude: number | null;
   tiers: LiveTier[];
   whatToExpectPoints: string[];
-  /** OPTIONAL — URL-safe slug. Requested addition */
-  slug?: string;
-  /** OPTIONAL — visibility flag. Requested addition; default true if absent */
-  published?: boolean;
 }
 
 /**
@@ -82,10 +91,11 @@ export async function fetchGameBySlug(
   const all = await fetchGamesCatalogue(opts);
   if (!all.length) return null;
 
-  const byExplicitSlug = all.find((g) => g.slug === siteSlug);
-  if (byExplicitSlug) return byExplicitSlug;
+  const bySiteId = all.find((g) => g.siteId === siteSlug);
+  if (bySiteId) return bySiteId;
 
-  // Fallback: slugify the name and compare
+  // Fallback: slugify the game's `name` and compare. Kept for resilience
+  // in case the app team ever ships a game record without a siteId set.
   return all.find((g) => slugify(g.name) === siteSlug) ?? null;
 }
 
@@ -133,6 +143,7 @@ function isLiveGame(x: unknown): x is LiveGame {
   if (!x || typeof x !== 'object') return false;
   const g = x as Record<string, unknown>;
   if (typeof g.id !== 'string') return false;
+  if (typeof g.siteId !== 'string') return false;
   if (typeof g.name !== 'string') return false;
   if (typeof g.description !== 'string') return false;
   if (typeof g.location !== 'string') return false;
@@ -150,7 +161,5 @@ function isLiveGame(x: unknown): x is LiveGame {
     if (tier.stripePriceId !== undefined && typeof tier.stripePriceId !== 'string') return false;
   }
   if (!Array.isArray(g.whatToExpectPoints)) return false;
-  if (g.slug !== undefined && typeof g.slug !== 'string') return false;
-  if (g.published !== undefined && typeof g.published !== 'boolean') return false;
   return true;
 }

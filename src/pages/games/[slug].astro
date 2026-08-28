@@ -16,7 +16,7 @@ const city = await getEntry('cities', game.data.citySlug);
 // Overlay live app data on top of Markdown-owned fields.
 const catalogue = await fetchGamesCatalogue();
 const apiGame = catalogue.find(
-  (g) => g.slug === game.slug || slugify(g.name) === game.slug
+  (g) => g.siteId === game.slug || slugify(g.name) === game.slug
 );
 
 const displayTitle       = apiGame?.name ?? game.data.title;
