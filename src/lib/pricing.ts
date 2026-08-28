@@ -22,10 +22,11 @@ export interface LiveTier {
   minPlayers: number;
   maxPlayers: number;
   /**
-   * Price value from the app API. Unit still worth confirming with the
-   * app team: appears to be in POUNDS now (40.0 = £40), previously was
-   * pence-as-float (30.0 = £0.30). Currently the site uses Markdown
-   * `pricePence` for display, so this field isn't rendered yet.
+   * Price in POUNDS as a decimal (e.g. 40.0 = £40, 12.50 = £12.50).
+   * Confirmed by app team's admin UI — the field holds pounds, not pence.
+   * Currently the site uses Markdown `pricePence` for display, so this
+   * field isn't rendered yet. When we swap to API-driven display, use
+   * `formatPricePounds()` below, not `formatPricePence()`.
    */
   price: number;
   /**
@@ -109,11 +110,10 @@ export function findTier(game: LiveGame, tierId: string): LiveTier | null {
 }
 
 /**
- * Format a price for display. The app returns price in pence
- * as a float; we render it as pounds, showing pence only when
- * the value isn't a whole pound.
+ * Format a price given in PENCE (integer) for display.
+ * Used for the site's Markdown price tiers (`pricePence: 4000` = £40).
  */
-export function formatPrice(pricePence: number): string {
+export function formatPricePence(pricePence: number): string {
   const pounds = pricePence / 100;
   return pounds % 1 === 0
     ? `£${pounds.toFixed(0)}`
@@ -121,10 +121,20 @@ export function formatPrice(pricePence: number): string {
 }
 
 /**
- * Back-compat alias for the older name used across page components.
- * Both names accept pence and return "£X" or "£X.YY".
+ * Format a price given in POUNDS (decimal) for display.
+ * Used for the app API's `price` field (`price: 40` = £40).
  */
-export const formatPricePence = formatPrice;
+export function formatPricePounds(pounds: number): string {
+  return pounds % 1 === 0
+    ? `£${pounds.toFixed(0)}`
+    : `£${pounds.toFixed(2)}`;
+}
+
+/**
+ * Legacy alias — same as formatPricePence. Kept so existing callers
+ * keep working while we standardise on the explicit-unit names above.
+ */
+export const formatPrice = formatPricePence;
 
 /**
  * Normalise a string to a URL slug — used for the temporary
