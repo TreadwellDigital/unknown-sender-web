@@ -1,0 +1,24 @@
+/**
+ * Cloudflare Workers-with-Assets deploy config for the Astro build.
+ *
+ * Astro's Cloudflare adapter outputs:
+ *   dist/_worker.js/index.js  ← the SSR handler
+ *   dist/**                   ← static assets (HTML, CSS, JS, images)
+ *
+ * `wrangler deploy` (run by Cloudflare Pages on every push) reads this
+ * file to know where the worker code and the static assets live.
+ *
+ * Environment variables are set in the Cloudflare Pages dashboard, not
+ * here — that keeps secrets out of git.
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "unknown-sender-web",
+  "compatibility_date": "2026-08-28",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./dist/_worker.js/index.js",
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./dist"
+  }
+}
