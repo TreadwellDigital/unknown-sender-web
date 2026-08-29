@@ -395,18 +395,21 @@ const appBaseUrl = import.meta.env.APP_BACKEND_URL ?? '';
     flex-wrap: wrap;
   }
 
-  /* Brand mark pinned inside the hero (matches home page pattern) */
+  /* Brand mark pinned top-left inside the hero, inset to match the
+     content wrapper's padding (24px mobile, 56px desktop). */
   .hero-logo {
     position: absolute;
     top: 32px;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 24px;
     z-index: 3;
     display: block;
     filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.6));
     transition: transform 0.25s ease;
   }
-  .hero-logo:hover { transform: translateX(-50%) translateY(-2px); }
+  .hero-logo:hover { transform: translateY(-2px); }
+  @media (min-width: 768px) {
+    .hero-logo { left: 56px; }
+  }
   .hero-logo img {
     display: block;
     height: 88px;

@@ -168,16 +168,20 @@ const games = (await getCollection('games'))
     pointer-events: none;
   }
 
-  /* Logo: in flex flow, at the top, centred horizontally */
+  /* Logo: top-left in flex flow, inset to line up with the content's
+     left edge (same horizontal padding as .wrap). */
   .hero-logo {
     position: relative;
     z-index: 3;
-    align-self: center;
+    align-self: flex-start;
     margin-top: 40px;
-    padding: 0 20px;
+    padding-left: 24px; /* matches .wrap on mobile */
     display: block;
     filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.6));
     transition: transform 0.25s ease;
+  }
+  @media (min-width: 768px) {
+    .hero-logo { padding-left: 56px; } /* matches .wrap on desktop */
   }
   .hero-logo:hover { transform: translateY(-2px); }
   .hero-logo img {
