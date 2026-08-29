@@ -54,20 +54,25 @@ const appBaseUrl = import.meta.env.APP_BACKEND_URL ?? '';
         <img src={game.data.heroImageMobile} alt={game.data.heroImageAlt} />
       </picture>
 
-      <!-- Brand mark + nav pinned inside the hero (same pattern as home) -->
-      <a href="/" class="hero-logo" aria-label="Unknown Sender home">
-        <img
-          src="/logo-640.png"
-          srcset="/logo-640.png 1x, /logo-trimmed.png 2x"
-          alt="Unknown Sender"
-          width="220"
-          height="107"
-        />
-      </a>
-      <nav class="hero-nav" aria-label="Primary">
-        <a href="/games">Case files</a>
-        <a href="/before-you-play">Before you play</a>
-      </nav>
+      <!-- Top bar: brand mark (left) + nav (right) wrapped in .wrap so both
+           align with the same centered box as the heading below. -->
+      <div class="hero-topbar">
+        <div class="wrap hero-topbar-inner">
+          <a href="/" class="hero-logo" aria-label="Unknown Sender home">
+            <img
+              src="/logo-640.png"
+              srcset="/logo-640.png 1x, /logo-trimmed.png 2x"
+              alt="Unknown Sender"
+              width="220"
+              height="107"
+            />
+          </a>
+          <nav class="hero-nav" aria-label="Primary">
+            <a href="/games">Case files</a>
+            <a href="/before-you-play">Before you play</a>
+          </nav>
+        </div>
+      </div>
 
       <div class="hero-overlay">
         <div class="wrap">
@@ -395,21 +400,27 @@ const appBaseUrl = import.meta.env.APP_BACKEND_URL ?? '';
     flex-wrap: wrap;
   }
 
-  /* Brand mark pinned top-left inside the hero, inset to match the
-     content wrapper's padding (24px mobile, 56px desktop). */
-  .hero-logo {
+  /* Top bar: absolutely positioned strip; the inner .wrap aligns logo (left)
+     and nav (right) with the same max-width centered box as the heading. */
+  .hero-topbar {
     position: absolute;
     top: 32px;
-    left: 24px;
+    left: 0;
+    right: 0;
     z-index: 3;
+  }
+  .hero-topbar-inner {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .hero-logo {
     display: block;
     filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.6));
     transition: transform 0.25s ease;
   }
   .hero-logo:hover { transform: translateY(-2px); }
-  @media (min-width: 768px) {
-    .hero-logo { left: 56px; }
-  }
   .hero-logo img {
     display: block;
     height: 88px;
@@ -417,10 +428,7 @@ const appBaseUrl = import.meta.env.APP_BACKEND_URL ?? '';
   }
 
   .hero-nav {
-    position: absolute;
-    top: 48px;
-    right: 40px;
-    z-index: 3;
+    margin-top: 12px; /* optical-align with the logo baseline */
     display: flex;
     gap: 22px;
     font-family: var(--font-mono);
@@ -438,8 +446,8 @@ const appBaseUrl = import.meta.env.APP_BACKEND_URL ?? '';
 
   @media (max-width: 620px) {
     .hero-nav { display: none; } /* mobile uses the hamburger overlay */
+    .hero-topbar { top: 24px; }
     .hero-logo img { height: 68px; }
-    .hero-logo { top: 24px; }
   }
 
   /* ---------- META ---------- */

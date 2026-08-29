@@ -24,22 +24,25 @@ const games = (await getCollection('games'))
     <!-- Vignette + darkening overlay so text stays legible -->
     <div class="hero-shade" aria-hidden="true"></div>
 
-    <!-- Brand mark, in normal flow at top of the flex column -->
-    <a href="/" class="hero-logo" aria-label="Unknown Sender home">
-      <img
-        src="/logo-640.png"
-        srcset="/logo-640.png 1x, /logo-trimmed.png 2x"
-        alt="Unknown Sender"
-        width="220"
-        height="107"
-      />
-    </a>
-
-    <!-- Desktop nav, top-right (hamburger handles mobile via MobileNav component) -->
-    <nav class="hero-nav" aria-label="Primary">
-      <a href="/games">Case files</a>
-      <a href="/before-you-play">Before you play</a>
-    </nav>
+    <!-- Top bar: logo (left) + desktop nav (right), both inside .wrap so
+         they align with the same max-width centered box as the copy below. -->
+    <div class="hero-topbar">
+      <div class="wrap hero-topbar-inner">
+        <a href="/" class="hero-logo" aria-label="Unknown Sender home">
+          <img
+            src="/logo-640.png"
+            srcset="/logo-640.png 1x, /logo-trimmed.png 2x"
+            alt="Unknown Sender"
+            width="220"
+            height="107"
+          />
+        </a>
+        <nav class="hero-nav" aria-label="Primary">
+          <a href="/games">Case files</a>
+          <a href="/before-you-play">Before you play</a>
+        </nav>
+      </div>
+    </div>
 
     <!-- Copy + CTAs pushed to bottom via margin-top: auto -->
     <div class="wrap hero-content">
@@ -168,20 +171,27 @@ const games = (await getCollection('games'))
     pointer-events: none;
   }
 
-  /* Logo: top-left in flex flow, inset to line up with the content's
-     left edge (same horizontal padding as .wrap). */
-  .hero-logo {
-    position: relative;
+  /* Top bar: absolutely positioned strip so it hovers over the hero image;
+     inner .wrap gives it the same centered max-width box as the copy below,
+     so the logo (left) and nav (right) sit flush with the heading's edges. */
+  .hero-topbar {
+    position: absolute;
+    top: 40px;
+    left: 0;
+    right: 0;
     z-index: 3;
-    align-self: flex-start;
-    margin-top: 40px;
-    padding-left: 24px; /* matches .wrap on mobile */
+  }
+  .hero-topbar-inner {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .hero-logo {
     display: block;
     filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.6));
     transition: transform 0.25s ease;
-  }
-  @media (min-width: 768px) {
-    .hero-logo { padding-left: 56px; } /* matches .wrap on desktop */
   }
   .hero-logo:hover { transform: translateY(-2px); }
   .hero-logo img {
@@ -190,12 +200,9 @@ const games = (await getCollection('games'))
     width: auto;
   }
 
-  /* Desktop nav, top-right corner */
+  /* Desktop nav, top-right of the same .wrap-bounded top bar */
   .hero-nav {
-    position: absolute;
-    top: 48px;
-    right: 40px;
-    z-index: 3;
+    margin-top: 12px; /* optical-align with the logo baseline */
     display: flex;
     gap: 22px;
     font-family: var(--font-mono);
@@ -275,7 +282,7 @@ const games = (await getCollection('games'))
 
   @media (max-width: 620px) {
     .hero-nav { display: none; } /* mobile uses the hamburger overlay */
-    .hero-logo { margin-top: 28px; }
+    .hero-topbar { top: 28px; }
     .hero-logo img { height: 76px; }
     .hero-content { padding-bottom: 80px; }
     .hero h1 { margin-top: 16px; }
