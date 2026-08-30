@@ -33,7 +33,14 @@ const openDateFormatted = game.data.bookingsOpenAt
       day: 'numeric', month: 'long', year: 'numeric',
     })
   : null;
-const waitlistUrl = import.meta.env.PUBLIC_BREVO_WAITLIST_URL ?? '';
+// Brevo subscription-form action URL. Intentionally public — it's the
+// same URL that would be in the form's shareable HTML snippet, so there's
+// no secret to leak. The env var wins if set (useful for staging/dev
+// pointing at a different form), but we ship a production default so the
+// waitlist works even if the env var goes missing on the host.
+const waitlistUrl =
+  import.meta.env.PUBLIC_BREVO_WAITLIST_URL ||
+  'https://aef6aabe.sibforms.com/serve/MUIFAEicZke5JZKVcRGwng2WuO5A9eg8MW4BviYPnH4Wpun9qnR-XSlLLrSiAFp7vqfmacZuLrPkO3UZFxzbh-34gGhpU1lEPqtGcudq-rw7XcZ53hd_s4w4SENvGkIBxKwRzKoK6SSHEj9mMjVUYHPOrXBL-trAnGQ1XNjmuzwqDjxLaYkZf-jnRntfxiKeC7RupGTqQM5m2ENRKg==';
 
 // Leaderboard: pass the app's UUID for this game to the client script.
 const appGameId = apiGame?.id ?? null;
