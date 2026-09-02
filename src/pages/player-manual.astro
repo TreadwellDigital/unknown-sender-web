@@ -1,0 +1,148 @@
+---
+export const prerender = true;
+
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Player manual, Unknown Sender"
+  description="How Unknown Sender works — quick reference for players. App, messaging, hints, HELP and SKIP, leaderboard."
+  canonicalPath="/player-manual"
+>
+  <article class="page">
+    <div class="wrap-narrow">
+      <div class="eyebrow"><span class="dot"></span>Manual</div>
+      <h1>How to play.</h1>
+      <p class="lede">
+        Everything you need to know in two minutes. Read this before you set out.
+        For safety, kit and weather, see <a href="/before-you-play">Before you play</a>.
+      </p>
+
+      <section>
+        <h2>The basics</h2>
+        <p>Unknown Sender is a real-world mystery played on foot. You&rsquo;ll walk
+          somewhere between three and five kilometres, follow messages from people
+          inside the story, solve puzzles at real locations, and make a final choice
+          that decides how it ends. It takes 90&ndash;120 minutes.</p>
+        <p>Everything happens through the <strong>Unknown Sender app</strong> on one
+          team&rsquo;s phone. You can share the phone as you go, or invite up to three
+          teammates so everyone sees the messages on their own device.</p>
+      </section>
+
+      <section>
+        <h2>Before the day</h2>
+        <ol>
+          <li>Book on this site and pick a team nickname (this shows on the leaderboard).</li>
+          <li>Install the <strong>Unknown Sender</strong> app (iOS or Android) and sign
+            in with the email you booked with. Your session will be waiting.</li>
+          <li>Invite up to three teammates from inside the app if you want them to
+            see messages on their own phones.</li>
+          <li>Skim <a href="/before-you-play">Before you play</a> for what to wear
+            and bring.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Starting the session</h2>
+        <p>Head to the start location shown in the app. When you&rsquo;re ready, one
+          person taps <strong>Start</strong>. The timer begins and the first message
+          arrives.</p>
+        <p>You have 90 days from purchase to play, and you don&rsquo;t have to start
+          the moment you arrive, take a minute, get a drink, then begin.</p>
+      </section>
+
+      <section>
+        <h2>How the game plays</h2>
+        <p>Messages come from characters inside the story, a Narrator who helps drive
+          the plot, and named characters (NPCs) you talk to directly. They&rsquo;ll
+          each have a name and a photo, just like a real chat.</p>
+        <p>To progress, you&rsquo;ll do one of three things:</p>
+        <ul>
+          <li><strong>Reply with an answer</strong>, a keyword, a number, or a short
+            phrase. Case and punctuation don&rsquo;t matter.</li>
+          <li><strong>Tap a link</strong> to open a puzzle, an image, or an
+            interactive page. Solve what&rsquo;s there, then come back to the chat.</li>
+          <li><strong>Make a choice</strong> at branching moments. Different choices
+            take you down different paths, some routes are shorter, some are longer.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>When you&rsquo;re stuck</h2>
+        <p>Every puzzle has a hint ladder. Wait a bit and hints arrive automatically.
+          You can also ask for help or skip:</p>
+        <ul>
+          <li>Send <strong>HELP</strong> to the Narrator to get the current puzzle&rsquo;s
+            help message immediately.</li>
+          <li>Send <strong>SKIP</strong> to move past a puzzle you&rsquo;re truly stuck
+            on. Skips carry a small score penalty but keep the story moving.</li>
+        </ul>
+        <p>Wrong answers don&rsquo;t break anything, try again as many times as you
+          need. If a location looks closed or a link won&rsquo;t open, message us on
+          <strong>WhatsApp</strong> (details in your booking confirmation).</p>
+      </section>
+
+      <section>
+        <h2>The ending &amp; the leaderboard</h2>
+        <p>Near the end you&rsquo;ll be given a final choice, this is the decision
+          that defines your ending. There&rsquo;s no single &lsquo;right&rsquo; one.</p>
+        <p>When you finish, your team nickname, completion time and score are added to
+          the public leaderboard for that game. Phone numbers and personal details are
+          never shown.</p>
+      </section>
+
+      <section>
+        <h2>Rules of thumb</h2>
+        <ul>
+          <li>Cross roads only at proper crossings. Don&rsquo;t use your phone while
+            walking near traffic.</li>
+          <li>Stay together as a team.</li>
+          <li>Nothing in the game will ever ask you to enter private property, climb
+            anything, or approach strangers.</li>
+          <li>If anywhere feels unsafe or you want to stop, do, the game will still
+            be there tomorrow.</li>
+          <li>In a genuine emergency, call <strong>999</strong>.</li>
+        </ul>
+      </section>
+
+      <p class="closing">
+        See also <a href="/before-you-play">Before you play</a>,
+        <a href="/refunds">Refunds</a> and <a href="/terms">Terms</a>.
+      </p>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .page { padding: 80px 0; }
+  h1 { font-size: clamp(2.4rem, 6vw, 3.5rem); margin: 20px 0 20px; letter-spacing: -0.03em; }
+  .lede { color: var(--ink-dim); font-size: 17px; line-height: 1.6; margin-bottom: 48px; max-width: 580px; }
+
+  section { margin-bottom: 40px; }
+  h2 {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  p { margin-bottom: 12px; font-size: 15.5px; line-height: 1.65; color: var(--ink); }
+  ul, ol { padding-left: 20px; margin-bottom: 12px; }
+  li { margin-bottom: 6px; font-size: 15.5px; line-height: 1.55; }
+  strong { color: var(--ink); }
+
+  a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+
+  .closing {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    color: var(--ink-dim);
+    font-size: 14px;
+  }
+</style>
