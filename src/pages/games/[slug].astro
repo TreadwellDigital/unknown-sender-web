@@ -48,8 +48,13 @@ const appBaseUrl = import.meta.env.APP_BACKEND_URL ?? '';
 
 // Stripe publishable key — safe to expose to the browser (Stripe.js loads
 // this to render the inline card form). The secret key lives on the game
-// app backend, not here.
-const stripePublishableKey = import.meta.env.PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
+// app backend, not here. Env var wins if set (so we can swap to live keys
+// via Cloudflare), but we ship a T21 sandbox test-mode default so the
+// build always has *something* and the Book button never falls into the
+// "payment not configured" branch just because a build env var went AWOL.
+const stripePublishableKey =
+  import.meta.env.PUBLIC_STRIPE_PUBLISHABLE_KEY ||
+  'pk_test_51TEWY3D7MhrTTmdBmcJ8OCX00qOGuS2SaKKIX1U8bDQCvcauWpL5HSjmpct8FPDa1slDLWPEGvISDi89bPQ8t2E100DCAR3cYf';
 
 // Booking tiers. We prefer live data from the app (has stable UUIDs the
 // backend expects at checkout) and fall back to the Markdown tiers only
