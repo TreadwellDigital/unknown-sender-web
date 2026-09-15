@@ -62,9 +62,11 @@ export async function fetchGamesCatalogue(
 ): Promise<LiveGame[]> {
   const base = import.meta.env.APP_BACKEND_URL;
   if (!base) return [];
+  // Trim trailing slash so `${base}/api/games` doesn't become `//api/games`.
+  const normalisedBase = base.replace(/\/$/, '');
 
   try {
-    const res = await fetch(`${base}/api/games`, {
+    const res = await fetch(`${normalisedBase}/api/games`, {
       headers: { accept: 'application/json' },
       signal,
     });

@@ -818,6 +818,9 @@ const tiersHaveIds = bookingTiers.every((t) => t.id.length > 0);
   .field input:focus { outline: none; border-color: var(--accent); }
 
   .book-btn { width: 100%; margin-top: 12px; padding: 18px; font-size: 14px; }
+  /* `hidden` attr should always beat display rules on our buttons */
+  .book-btn[hidden] { display: none !important; }
+  .book-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .fine {
     margin-top: 16px;
