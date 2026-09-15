@@ -197,8 +197,11 @@ const tiersHaveIds = bookingTiers.every((t) => t.id.length > 0);
             clicks Continue. Hidden until we have a clientSecret. */}
         <div id="payment-wrap" hidden>
           <div id="payment-element"></div>
-          <p id="payment-error" class="payment-error" role="alert" hidden></p>
         </div>
+
+        {/* Error message — kept outside #payment-wrap so failures BEFORE
+            Stripe mounts (validation, proxy fetch, etc.) are visible. */}
+        <p id="payment-error" class="payment-error" role="alert" hidden></p>
 
         <button type="button" class="btn btn-primary book-btn" id="book-btn" disabled={!tiersHaveIds || !stripePublishableKey}>
           Continue to payment &rarr;
