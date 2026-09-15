@@ -14,52 +14,40 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
       <div class="eyebrow"><span class="dot"></span>Confirmed</div>
       <h1>Message received.</h1>
       <p class="lede">
-        Your booking is in. We&rsquo;ve sent a confirmation to your inbox with
-        everything you need to play.
+        Your payment has gone through. Check your inbox in the next couple of minutes
+        for an email with a link to open the game inside the <strong>Unknown Sender</strong> app.
       </p>
 
       <div class="code-box">
-        <div class="code-label">Your booking code</div>
-        <div class="code" id="booking-code">Loading&hellip;</div>
-        <p class="code-note">Save this. You&rsquo;ll enter it when you start.</p>
+        <div class="code-label">Next step</div>
+        <div class="code">Check your email</div>
+        <p class="code-note">
+          Didn&rsquo;t arrive? Check your spam folder, or open the app and tap
+          &ldquo;Sign in with email&rdquo; to get a fresh link.
+        </p>
       </div>
 
       <div class="next">
         <div class="eyebrow">Before you play</div>
         <ul>
-          <li>Read the <a href="/before-you-play">safety brief</a>. It&rsquo;s short.</li>
-          <li>Check the weather. Wear shoes you can walk in.</li>
-          <li>Have a phone with mobile data and enough battery for two hours.</li>
+          <li>Install the <strong>Unknown Sender</strong> app from the App Store or Google Play.</li>
+          <li>Skim the <a href="/player-manual">player manual</a>, it&rsquo;s a two-minute read.</li>
+          <li>Read the <a href="/before-you-play">safety brief</a> for kit and weather.</li>
+          <li>Head to the start location in the app when you&rsquo;re ready to play.</li>
         </ul>
         <p class="actions">
-          <a class="btn btn-ghost" href="/before-you-play">Read the brief</a>
+          <a class="btn btn-ghost" href="/player-manual">Read the manual</a>
         </p>
       </div>
     </div>
   </section>
-
-  <script>
-    // Post-checkout: Stripe redirected here with ?session_id=cs_...
-    // We look up the booking in Supabase (already created by the webhook).
-    // If the webhook hasn't fired yet, race condition, ~1s window, we retry.
-    async function loadCode() {
-      const el = document.getElementById('booking-code');
-      const url = new URL(window.location.href);
-      const sessionId = url.searchParams.get('session_id');
-      if (!sessionId) { el.textContent = '—'; return; }
-
-      // TODO: hit /api/booking-by-session/[sessionId] once implemented
-      // For now, show "check your email" fallback.
-      el.textContent = 'Check your email';
-    }
-    loadCode();
-  </script>
 </BaseLayout>
 
 <style>
   .page { padding: 100px 0; }
   h1 { font-size: clamp(2.4rem, 6vw, 3.5rem); margin: 20px 0 16px; letter-spacing: -0.03em; }
-  .lede { color: var(--ink-dim); font-size: 17px; line-height: 1.6; margin-bottom: 48px; max-width: 480px; }
+  .lede { color: var(--ink-dim); font-size: 17px; line-height: 1.6; margin-bottom: 48px; max-width: 560px; }
+  .lede strong { color: var(--ink); }
 
   .code-box {
     padding: 32px;
@@ -79,8 +67,8 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
   }
   .code {
     font-family: var(--font-mono);
-    font-size: 32px;
-    letter-spacing: 0.14em;
+    font-size: 24px;
+    letter-spacing: 0.08em;
     color: var(--accent);
     font-weight: 500;
   }
@@ -88,6 +76,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
     margin-top: 16px;
     font-size: 13px;
     color: var(--ink-dim);
+    line-height: 1.5;
   }
 
   .next .eyebrow { margin-bottom: 20px; }
@@ -104,6 +93,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
     line-height: 1.6;
     color: var(--ink);
   }
+  .next li strong { color: var(--ink); }
   .next li::before {
     content: '';
     position: absolute;

@@ -45,6 +45,36 @@ const waitlistUrl =
 // Leaderboard: pass the app's UUID for this game to the client script.
 const appGameId = apiGame?.id ?? null;
 const appBaseUrl = import.meta.env.APP_BACKEND_URL ?? '';
+
+// Stripe publishable key — safe to expose to the browser (Stripe.js loads
+// this to render the inline card form). The secret key lives on the game
+// app backend, not here.
+const stripePublishableKey = import.meta.env.PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
+
+// Booking tiers. We prefer live data from the app (has stable UUIDs the
+// backend expects at checkout) and fall back to the Markdown tiers only
+// for display when the app is unreachable — those don't have valid UUIDs
+// so the Book button gets disabled with an explanatory note.
+type BookingTier = {
+  id: string;         // app UUID (or empty when falling back to markdown)
+  label: string;
+  maxPlayers: number;
+  pricePence: number;
+};
+const bookingTiers: BookingTier[] = apiGame?.tiers?.length
+  ? apiGame.tiers.map((t) => ({
+      id: t.id,
+      label: t.label,
+      maxPlayers: t.maxPlayers,
+      pricePence: Math.round(t.price * 100), // API price is pounds, we show pence
+    }))
+  : game.data.priceTiers.map((t) => ({
+      id: '', // no valid app UUID — Book button will be disabled
+      label: t.label,
+      maxPlayers: t.maxPlayers,
+      pricePence: t.pricePence,
+    }));
+const tiersHaveIds = bookingTiers.every((t) => t.id.length > 0);
 ---
 
 <BaseLayout
@@ -128,8 +158,8 @@ const appBaseUrl = import.meta.env.APP_BACKEND_URL ?? '';
         <div class="eyebrow">Book</div>
         <h2>Choose your team size</h2>
 
-        <div class="tiers" data-game-slug={game.slug}>
-          {game.data.priceTiers.map((tier) => (
+        <div class="tiers" data-game-slug={game.slug} data-game-id={appGameId ?? ''}>
+          {bookingTiers.map((tier) => (
             <label class="tier">
               <input type="radio" name="tier" value={tier.id} data-price-pence={tier.pricePence} />
               <div class="tier-label">
@@ -149,13 +179,39 @@ const appBaseUrl = import.meta.env.APP_BACKEND_URL ?? '';
         </label>
 
         <label class="field">
+          <span>Your name</span>
+          <input type="text" name="displayName" id="displayName" maxlength="50" placeholder="Shown in-game" />
+        </label>
+
+        <label class="field">
           <span>Your email</span>
           <input type="email" name="email" id="email" placeholder="you@example.com" />
         </label>
 
-        <button type="button" class="btn btn-primary book-btn" id="book-btn">
-          Book &rarr;
+        {/* Stripe Elements (inline card form) mounts here once the user
+            clicks Continue. Hidden until we have a clientSecret. */}
+        <div id="payment-wrap" hidden>
+          <div id="payment-element"></div>
+          <p id="payment-error" class="payment-error" role="alert" hidden></p>
+        </div>
+
+        <button type="button" class="btn btn-primary book-btn" id="book-btn" disabled={!tiersHaveIds || !stripePublishableKey}>
+          Continue to payment &rarr;
         </button>
+        <button type="button" class="btn btn-primary book-btn" id="pay-btn" hidden>
+          Pay now &rarr;
+        </button>
+
+        {!tiersHaveIds && (
+          <p class="fine warn">
+            Bookings are temporarily unavailable while we reconnect to the game service. Please try again shortly.
+          </p>
+        )}
+        {tiersHaveIds && !stripePublishableKey && (
+          <p class="fine warn">
+            Payment configuration missing. Please contact support if this persists.
+          </p>
+        )}
 
         <p class="fine">
           By booking you agree to our <a href="/terms">Terms</a> and
@@ -222,40 +278,156 @@ const appBaseUrl = import.meta.env.APP_BACKEND_URL ?? '';
     </section>
   </article>
 
-  <script define:vars={{ waitlistUrl, appGameId, appBaseUrl }}>
-    // --- Booking button ---
-    const btn = document.getElementById('book-btn');
-    if (btn) {
-      btn.addEventListener('click', async () => {
-        const gameSlug = document.querySelector('.tiers')?.dataset.gameSlug;
-        const tier = document.querySelector('input[name="tier"]:checked')?.value;
-        const teamName = document.getElementById('teamName').value.trim();
-        const email = document.getElementById('email').value.trim();
+  <script define:vars={{ waitlistUrl, appGameId, appBaseUrl, stripePublishableKey }}>
+    // ---------------------------------------------------------------
+    // Booking / payment flow
+    //
+    // Two-step:
+    //   1. Continue: validate form, POST to /api/create-guest-checkout
+    //      (our server proxies to the game app's guest-checkout endpoint),
+    //      get back a Stripe PaymentIntent client secret, mount Stripe
+    //      Elements with it.
+    //   2. Pay now: confirm the payment with Stripe.js. On success Stripe
+    //      redirects to /checkout/success. Behind the scenes, the game
+    //      app's Stripe webhook picks up the successful payment and emails
+    //      the buyer a magic sign-in link to open the game in the app.
+    // ---------------------------------------------------------------
+    const continueBtn = document.getElementById('book-btn');
+    const payBtn      = document.getElementById('pay-btn');
+    const paymentWrap = document.getElementById('payment-wrap');
+    const paymentEl   = document.getElementById('payment-element');
+    const errorEl     = document.getElementById('payment-error');
 
-        if (!tier)     { alert('Pick a team size.'); return; }
-        if (!teamName) { alert('Enter a team name.'); return; }
+    let stripe = null;
+    let elements = null;
+
+    function showError(msg) {
+      if (!errorEl) return;
+      errorEl.textContent = msg;
+      errorEl.hidden = false;
+    }
+    function clearError() {
+      if (!errorEl) return;
+      errorEl.textContent = '';
+      errorEl.hidden = true;
+    }
+
+    // Lazy-load Stripe.js only when needed, so pages without a checkout
+    // don't pay the JS cost.
+    async function loadStripeJs() {
+      if (window.Stripe) return;
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://js.stripe.com/v3/';
+        s.async = true;
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('Failed to load Stripe.js'));
+        document.head.appendChild(s);
+      });
+    }
+
+    if (continueBtn) {
+      continueBtn.addEventListener('click', async () => {
+        clearError();
+        const gameId      = document.querySelector('.tiers')?.dataset.gameId;
+        const tierId      = document.querySelector('input[name="tier"]:checked')?.value;
+        const teamName    = document.getElementById('teamName').value.trim();
+        const displayName = document.getElementById('displayName').value.trim();
+        const email       = document.getElementById('email').value.trim();
+
+        if (!gameId)     { showError('Bookings are temporarily unavailable, please try again shortly.'); return; }
+        if (!tierId)     { showError('Pick a team size.'); return; }
+        if (!teamName)   { showError('Enter a team name.'); return; }
+        if (!displayName){ showError('Enter your name.'); return; }
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          alert('Enter a valid email.');
+          showError('Enter a valid email.');
+          return;
+        }
+        if (!stripePublishableKey) {
+          showError('Payment is not configured. Please contact support.');
           return;
         }
 
-        btn.setAttribute('disabled', 'true');
-        btn.innerText = 'Redirecting…';
+        continueBtn.setAttribute('disabled', 'true');
+        continueBtn.innerText = 'Setting up payment…';
 
         try {
-          const res = await fetch('/api/create-checkout-session', {
+          // 1. Ask our server to provision the session + PaymentIntent.
+          const res = await fetch('/api/create-guest-checkout', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ gameSlug, tierId: tier, teamName, email }),
+            body: JSON.stringify({ gameId, tierId, teamName, displayName, email }),
           });
-          const data = await res.json();
-          if (!res.ok || !data.url) throw new Error(data.error ?? 'Checkout failed');
-          window.location.href = data.url;
+          const data = await res.json().catch(() => ({}));
+
+          if (!res.ok) {
+            // 422 with NICKNAME_NOT_ALLOWED → surface it plainly
+            if (data?.error === 'NICKNAME_NOT_ALLOWED') {
+              const left = typeof data.warningsRemaining === 'number'
+                ? ` (${data.warningsRemaining} warning${data.warningsRemaining === 1 ? '' : 's'} remaining)`
+                : '';
+              showError(`That team name isn't allowed${left}. Try another.`);
+            } else {
+              showError(data?.error || data?.message || 'Could not start checkout. Try again.');
+            }
+            continueBtn.removeAttribute('disabled');
+            continueBtn.innerText = 'Continue to payment →';
+            return;
+          }
+
+          // Stub payment path (dev/test only) — session is already marked
+          // paid on the app side and no Stripe UI is needed. Send them
+          // straight to the success page.
+          if (data.stub) {
+            window.location.href = '/checkout/success?stub=1';
+            return;
+          }
+
+          // 2. Mount Stripe Elements with the returned client secret.
+          await loadStripeJs();
+          stripe = window.Stripe(stripePublishableKey);
+          elements = stripe.elements({
+            clientSecret: data.clientSecret,
+            appearance: { theme: 'night' }, // matches the dark UI
+          });
+          const paymentElement = elements.create('payment');
+          paymentElement.mount('#payment-element');
+
+          // Swap Continue → Pay button
+          continueBtn.hidden = true;
+          paymentWrap.hidden = false;
+          payBtn.hidden = false;
         } catch (err) {
           console.error(err);
-          alert('Could not start checkout. Try again in a moment.');
-          btn.removeAttribute('disabled');
-          btn.innerText = 'Book →';
+          showError('Could not start checkout. Try again in a moment.');
+          continueBtn.removeAttribute('disabled');
+          continueBtn.innerText = 'Continue to payment →';
+        }
+      });
+    }
+
+    if (payBtn) {
+      payBtn.addEventListener('click', async () => {
+        clearError();
+        if (!stripe || !elements) { showError('Payment not ready.'); return; }
+
+        payBtn.setAttribute('disabled', 'true');
+        payBtn.innerText = 'Processing…';
+
+        const { error } = await stripe.confirmPayment({
+          elements,
+          confirmParams: {
+            return_url: `${window.location.origin}/checkout/success`,
+          },
+        });
+
+        // If confirmPayment resolves without redirecting, the payment
+        // failed synchronously (bad card, declined, etc.) — show the
+        // message and let the user try again.
+        if (error) {
+          showError(error.message || 'Payment failed. Please try again.');
+          payBtn.removeAttribute('disabled');
+          payBtn.innerText = 'Pay now →';
         }
       });
     }
@@ -655,6 +827,25 @@ const appBaseUrl = import.meta.env.APP_BACKEND_URL ?? '';
     text-align: center;
   }
   .fine a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+  .fine.warn { color: var(--accent); }
+
+  /* Stripe Elements card form + inline error message */
+  #payment-wrap {
+    margin-top: 20px;
+    padding: 16px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .payment-error {
+    margin-top: 12px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #ffb4b4;
+    background: rgba(220, 38, 38, 0.12);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    border-radius: 6px;
+  }
 
   .waitlist-note {
     font-size: 15px;

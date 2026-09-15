@@ -102,7 +102,7 @@ export async function fetchGameBySlug(
 
 /**
  * Look up a single tier by id from a fetched LiveGame.
- * Used by the create-checkout-session route to resolve the
+ * Used by the create-guest-checkout route to resolve the
  * user's chosen tier to a Stripe price_id (or price_data fallback).
  */
 export function findTier(game: LiveGame, tierId: string): LiveTier | null {
