@@ -19,20 +19,13 @@
 export interface LiveTier {
   id: string;
   label: string;
-  minPlayers: number;
+  minPlayers?: number;
   maxPlayers: number;
   /**
    * Price in POUNDS as a decimal (e.g. 40.0 = £40, 12.50 = £12.50).
    * Confirmed by app team's admin UI — the field holds pounds, not pence.
-   * Currently the site uses Markdown `pricePence` for display, so this
-   * field isn't rendered yet. When we swap to API-driven display, use
-   * `formatPricePounds()` below, not `formatPricePence()`.
    */
   price: number;
-  /**
-   * The app doesn't expose Stripe price IDs — payments are created as
-   * inline Payment Intents. Field kept optional in case that ever changes.
-   */
   stripePriceId?: string;
 }
 
@@ -40,16 +33,17 @@ export interface LiveGame {
   id: string;
   /**
    * URL-safe identifier used by the site to match its route (`/games/last-call`)
-   * to the app's game record. App team added this field on their side.
+   * to the app's game record. Optional: falls back to slugified name matching
+   * if the app hasn't populated it yet.
    */
-  siteId: string;
+  siteId?: string;
   name: string;
-  description: string;
-  location: string;
-  latitude: number | null;
-  longitude: number | null;
+  description?: string;
+  location?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   tiers: LiveTier[];
-  whatToExpectPoints: string[];
+  whatToExpectPoints?: string[];
 }
 
 /**
@@ -151,27 +145,23 @@ export function slugify(name: string): string {
 }
 
 // --- Runtime shape check (defensive; app could regress the schema) ---
+// Only the fields we actually depend on are required. `siteId`,
+// `whatToExpectPoints` and geo fields are optional so a partial API
+// response still yields a usable game (with graceful fallback to
+// Markdown for missing fields, and slug-name matching if siteId absent).
 function isLiveGame(x: unknown): x is LiveGame {
   if (!x || typeof x !== 'object') return false;
   const g = x as Record<string, unknown>;
-  if (typeof g.id !== 'string') return false;
-  if (typeof g.siteId !== 'string') return false;
-  if (typeof g.name !== 'string') return false;
-  if (typeof g.description !== 'string') return false;
-  if (typeof g.location !== 'string') return false;
-  if (g.latitude !== null && typeof g.latitude !== 'number') return false;
-  if (g.longitude !== null && typeof g.longitude !== 'number') return false;
-  if (!Array.isArray(g.tiers)) return false;
+  if (typeof g.id !== 'string' || !g.id) return false;
+  if (typeof g.name !== 'string' || !g.name) return false;
+  if (!Array.isArray(g.tiers) || g.tiers.length === 0) return false;
   for (const t of g.tiers) {
     if (!t || typeof t !== 'object') return false;
     const tier = t as Record<string, unknown>;
-    if (typeof tier.id !== 'string') return false;
+    if (typeof tier.id !== 'string' || !tier.id) return false;
     if (typeof tier.label !== 'string') return false;
-    if (typeof tier.minPlayers !== 'number') return false;
     if (typeof tier.maxPlayers !== 'number') return false;
     if (typeof tier.price !== 'number') return false;
-    if (tier.stripePriceId !== undefined && typeof tier.stripePriceId !== 'string') return false;
   }
-  if (!Array.isArray(g.whatToExpectPoints)) return false;
   return true;
 }
