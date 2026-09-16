@@ -291,7 +291,7 @@ const tiersHaveIds = bookingTiers.every((t) => t.id.length > 0);
     // Booking / payment flow
     //
     // Two-step:
-    //   1. Continue: validate form, POST to /api/create-guest-checkout
+    //   1. Continue: validate form, POST to /api/checkout
     //      (our server proxies to the game app's guest-checkout endpoint),
     //      get back a Stripe PaymentIntent client secret, mount Stripe
     //      Elements with it.
@@ -361,7 +361,7 @@ const tiersHaveIds = bookingTiers.every((t) => t.id.length > 0);
 
         try {
           // 1. Ask our server to provision the session + PaymentIntent.
-          const res = await fetch('/api/create-guest-checkout', {
+          const res = await fetch('/api/checkout', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ gameId, tierId, teamName, displayName, email }),
