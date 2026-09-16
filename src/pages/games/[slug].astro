@@ -403,20 +403,34 @@ const tiersHaveIds = bookingTiers.every((t) => t.id.length > 0);
             return;
           }
 
-          // 2. Mount Stripe Elements with the returned client secret.
+          // 2. Load Stripe.js, reveal the payment container FIRST (Stripe
+          //    won't render into a hidden element), then mount Elements.
           await loadStripeJs();
-          stripe = window.Stripe(stripePublishableKey);
-          elements = stripe.elements({
-            clientSecret: data.clientSecret,
-            appearance: { theme: 'night' }, // matches the dark UI
-          });
-          const paymentElement = elements.create('payment');
-          paymentElement.mount('#payment-element');
+          if (!data.clientSecret) {
+            showError('No client secret returned from checkout service.');
+            continueBtn.removeAttribute('disabled');
+            continueBtn.innerText = 'Continue to payment →';
+            return;
+          }
 
-          // Swap Continue → Pay button
           continueBtn.hidden = true;
           paymentWrap.hidden = false;
           payBtn.hidden = false;
+
+          stripe = window.Stripe(stripePublishableKey);
+          elements = stripe.elements({
+            clientSecret: data.clientSecret,
+            appearance: { theme: 'night' },
+          });
+          const paymentElement = elements.create('payment');
+          paymentElement.on('ready', () => {
+            console.log('[stripe] payment element ready');
+          });
+          paymentElement.on('loaderror', (ev) => {
+            console.error('[stripe] payment element load error:', ev?.error);
+            showError(ev?.error?.message || 'Could not load the card form.');
+          });
+          paymentElement.mount('#payment-element');
         } catch (err) {
           console.error(err);
           showError('Could not start checkout. Try again in a moment.');
@@ -860,6 +874,7 @@ const tiersHaveIds = bookingTiers.every((t) => t.id.length > 0);
     border: 1px solid var(--line);
     border-radius: 8px;
   }
+  #payment-element { min-height: 180px; }
   .payment-error {
     margin-top: 12px;
     padding: 10px 12px;
