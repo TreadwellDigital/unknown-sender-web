@@ -37,89 +37,105 @@ interface GuestCheckoutRequest {
   email?: unknown;
 }
 
-export const POST: APIRoute = async ({ request }) => {
-  const base = import.meta.env.APP_BACKEND_URL;
-  if (!base) {
-    console.error('APP_BACKEND_URL not set');
-    return json({ error: 'checkout not configured' }, 500);
-  }
+/**
+ * Resolve the app backend URL from wherever it can be found. On Cloudflare
+ * Workers, non-PUBLIC env vars aren't always reflected on `import.meta.env`
+ * at runtime — they come through `locals.runtime.env` via the Cloudflare
+ * adapter. We check both, then fall back to the known production URL
+ * (which isn't a secret) so the endpoint never dies just because an env
+ * var didn't propagate.
+ */
+function resolveAppBackendUrl(locals: any): string {
+  const fromImportMeta = (import.meta.env as any)?.APP_BACKEND_URL;
+  const fromRuntimeEnv = locals?.runtime?.env?.APP_BACKEND_URL;
+  const raw = fromImportMeta || fromRuntimeEnv || 'https://api.unknownsender.co.uk';
+  return String(raw).replace(/\/$/, '');
+}
 
-  // --- Parse + validate request body ---
-  let body: GuestCheckoutRequest;
+export const POST: APIRoute = async ({ request, locals }) => {
+  // Top-level try/catch guarantees we always return JSON — never a
+  // Cloudflare 502 HTML error page — so the client can show a message.
   try {
-    body = (await request.json()) as GuestCheckoutRequest;
-  } catch {
-    return json({ error: 'invalid JSON body' }, 400);
-  }
+    const base = resolveAppBackendUrl(locals);
 
-  const gameId      = typeof body.gameId      === 'string' ? body.gameId.trim()      : '';
-  const tierId      = typeof body.tierId      === 'string' ? body.tierId.trim()      : '';
-  const teamName    = typeof body.teamName    === 'string' ? body.teamName.trim()    : '';
-  const displayName = typeof body.displayName === 'string' ? body.displayName.trim() : '';
-  const email       = typeof body.email       === 'string' ? body.email.trim()       : '';
+    // --- Parse + validate request body ---
+    let body: GuestCheckoutRequest;
+    try {
+      body = (await request.json()) as GuestCheckoutRequest;
+    } catch {
+      return json({ error: 'invalid JSON body' }, 400);
+    }
 
-  if (!gameId)      return json({ error: 'gameId is required' }, 400);
-  if (!tierId)      return json({ error: 'tierId is required' }, 400);
-  if (!teamName || teamName.length > 50) {
-    return json({ error: 'teamName is required (1–50 characters)' }, 400);
-  }
-  if (!displayName || displayName.length > 50) {
-    return json({ error: 'displayName is required (1–50 characters)' }, 400);
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return json({ error: 'a valid email is required' }, 400);
-  }
+    const gameId      = typeof body.gameId      === 'string' ? body.gameId.trim()      : '';
+    const tierId      = typeof body.tierId      === 'string' ? body.tierId.trim()      : '';
+    const teamName    = typeof body.teamName    === 'string' ? body.teamName.trim()    : '';
+    const displayName = typeof body.displayName === 'string' ? body.displayName.trim() : '';
+    const email       = typeof body.email       === 'string' ? body.email.trim()       : '';
 
-  // --- Forward to game app backend ---
-  const url = `${base.replace(/\/$/, '')}/web-api/games/purchase-guest`;
-  let upstream: Response;
-  try {
-    upstream = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        accept: 'application/json',
-      },
-      body: JSON.stringify({
-        gameId,
-        tierId,
-        teamNickname: teamName,
-        displayName,
-        email,
-      }),
-    });
+    if (!gameId)      return json({ error: 'gameId is required' }, 400);
+    if (!tierId)      return json({ error: 'tierId is required' }, 400);
+    if (!teamName || teamName.length > 50) {
+      return json({ error: 'teamName is required (1–50 characters)' }, 400);
+    }
+    if (!displayName || displayName.length > 50) {
+      return json({ error: 'displayName is required (1–50 characters)' }, 400);
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return json({ error: 'a valid email is required' }, 400);
+    }
+
+    // --- Forward to game app backend ---
+    const url = `${base}/web-api/games/purchase-guest`;
+    let upstream: Response;
+    try {
+      upstream = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          accept: 'application/json',
+        },
+        body: JSON.stringify({
+          gameId,
+          tierId,
+          teamNickname: teamName,
+          displayName,
+          email,
+        }),
+      });
+    } catch (err: any) {
+      console.error('guest-checkout upstream fetch failed:', err?.message || err);
+      return json({ error: `could not reach checkout service: ${err?.message || 'network error'}` }, 502);
+    }
+
+    const upstreamText = await upstream.text();
+    let payload: any;
+    try {
+      payload = upstreamText ? JSON.parse(upstreamText) : null;
+    } catch {
+      console.error(
+        `guest-checkout upstream returned non-JSON (status ${upstream.status}):`,
+        upstreamText.slice(0, 500)
+      );
+      return json({
+        error: `checkout service returned non-JSON (${upstream.status}): ${upstreamText.slice(0, 200)}`,
+      }, 502);
+    }
+
+    if (!upstream.ok) {
+      console.warn(`guest-checkout upstream ${upstream.status}:`, payload);
+      return json(payload ?? { error: `checkout failed (${upstream.status})` }, upstream.status);
+    }
+
+    if (!payload?.clientSecret && !payload?.stub) {
+      console.error('guest-checkout upstream ok but missing clientSecret/stub:', payload);
+      return json({ error: 'checkout service returned an incomplete response' }, 502);
+    }
+
+    return json(payload, 201);
   } catch (err: any) {
-    console.error('guest-checkout upstream fetch failed:', err);
-    return json({ error: 'could not reach checkout service' }, 502);
+    console.error('guest-checkout handler crashed:', err);
+    return json({ error: `internal error: ${err?.message || 'unknown'}` }, 500);
   }
-
-  const upstreamText = await upstream.text();
-  let payload: any;
-  try {
-    payload = upstreamText ? JSON.parse(upstreamText) : null;
-  } catch {
-    // Upstream returned non-JSON — log the raw body for debugging.
-    console.error(
-      `guest-checkout upstream returned non-JSON (status ${upstream.status}):`,
-      upstreamText.slice(0, 500)
-    );
-    return json({ error: 'checkout service returned an unexpected response' }, 502);
-  }
-
-  if (!upstream.ok) {
-    // Pass through structured errors verbatim so the client can, e.g.,
-    // show `warningsRemaining` for a blocked team nickname (422).
-    console.warn(`guest-checkout upstream ${upstream.status}:`, payload);
-    return json(payload ?? { error: 'checkout failed' }, upstream.status);
-  }
-
-  // Expected shape: { sessionId, clientSecret, stub }
-  if (!payload?.clientSecret && !payload?.stub) {
-    console.error('guest-checkout upstream ok but missing clientSecret/stub:', payload);
-    return json({ error: 'checkout service returned an incomplete response' }, 502);
-  }
-
-  return json(payload, 201);
 };
 
 function json(body: unknown, status = 200): Response {
