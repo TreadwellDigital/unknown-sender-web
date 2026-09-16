@@ -1,76 +1,42 @@
 /**
- * POST /api/create-guest-checkout
+ * POST /api/checkout
  *
- * Called from the game page when a user clicks "Book". Proxies the request
- * to the game app backend's public guest-checkout endpoint, which:
+ * Proxies to the game app backend's public guest-checkout endpoint:
  *   - creates (or reuses) a user by email
  *   - creates a game session
  *   - creates a Stripe PaymentIntent
  *   - returns { sessionId, clientSecret, stub }
  *
- * The client then uses `clientSecret` with Stripe.js to confirm the
- * payment inline (Stripe Elements), and Jonathan's Stripe webhook picks
- * up the successful payment and emails the buyer a magic sign-in link.
+ * The client uses `clientSecret` with Stripe.js to confirm the payment
+ * inline, and Jonathan's Stripe webhook picks up the successful payment
+ * and emails the buyer a magic sign-in link.
  *
  * We proxy server-to-server rather than calling the app backend directly
  * from the browser so that CORS + CSRF on his side aren't blockers.
- *
- * Body (from the browser):
- *   { gameId: string, tierId: string, teamName: string, displayName: string, email: string }
- *
- * Response:
- *   { sessionId, clientSecret, stub }        — 201
- *   { error: string, warningsRemaining? }    — 4xx/5xx
- *
- * ⚠️  MUST NOT be prerendered. Runs on every request.
  */
-
-import type { APIRoute } from 'astro';
 
 export const prerender = false;
 
-interface GuestCheckoutRequest {
-  gameId?: unknown;
-  tierId?: unknown;
-  teamName?: unknown;
-  displayName?: unknown;
-  email?: unknown;
-}
+// APP_BACKEND_URL isn't a secret — hardcoded fallback keeps this endpoint
+// alive even if the Cloudflare env var doesn't propagate.
+const DEFAULT_APP_BACKEND_URL = 'https://api.unknownsender.co.uk';
 
-/**
- * Resolve the app backend URL from wherever it can be found. On Cloudflare
- * Workers, non-PUBLIC env vars aren't always reflected on `import.meta.env`
- * at runtime — they come through `locals.runtime.env` via the Cloudflare
- * adapter. We check both, then fall back to the known production URL
- * (which isn't a secret) so the endpoint never dies just because an env
- * var didn't propagate.
- */
-function resolveAppBackendUrl(locals: any): string {
-  const fromImportMeta = (import.meta.env as any)?.APP_BACKEND_URL;
-  const fromRuntimeEnv = locals?.runtime?.env?.APP_BACKEND_URL;
-  const raw = fromImportMeta || fromRuntimeEnv || 'https://api.unknownsender.co.uk';
-  return String(raw).replace(/\/$/, '');
-}
-
-export const POST: APIRoute = async ({ request, locals }) => {
-  // Top-level try/catch guarantees we always return JSON — never a
-  // Cloudflare 502 HTML error page — so the client can show a message.
+export async function POST({ request, locals }: { request: Request; locals: any }) {
   try {
     const base = resolveAppBackendUrl(locals);
 
-    // --- Parse + validate request body ---
-    let body: GuestCheckoutRequest;
+    let body: any;
     try {
-      body = (await request.json()) as GuestCheckoutRequest;
+      body = await request.json();
     } catch {
       return json({ error: 'invalid JSON body' }, 400);
     }
 
-    const gameId      = typeof body.gameId      === 'string' ? body.gameId.trim()      : '';
-    const tierId      = typeof body.tierId      === 'string' ? body.tierId.trim()      : '';
-    const teamName    = typeof body.teamName    === 'string' ? body.teamName.trim()    : '';
-    const displayName = typeof body.displayName === 'string' ? body.displayName.trim() : '';
-    const email       = typeof body.email       === 'string' ? body.email.trim()       : '';
+    const gameId      = typeof body?.gameId      === 'string' ? body.gameId.trim()      : '';
+    const tierId      = typeof body?.tierId      === 'string' ? body.tierId.trim()      : '';
+    const teamName    = typeof body?.teamName    === 'string' ? body.teamName.trim()    : '';
+    const displayName = typeof body?.displayName === 'string' ? body.displayName.trim() : '';
+    const email       = typeof body?.email       === 'string' ? body.email.trim()       : '';
 
     if (!gameId)      return json({ error: 'gameId is required' }, 400);
     if (!tierId)      return json({ error: 'tierId is required' }, 400);
@@ -84,7 +50,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
       return json({ error: 'a valid email is required' }, 400);
     }
 
-    // --- Forward to game app backend ---
     const url = `${base}/web-api/games/purchase-guest`;
     let upstream: Response;
     try {
@@ -103,8 +68,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
         }),
       });
     } catch (err: any) {
-      console.error('guest-checkout upstream fetch failed:', err?.message || err);
-      return json({ error: `could not reach checkout service: ${err?.message || 'network error'}` }, 502);
+      return json({
+        error: `could not reach checkout service: ${err?.message || 'network error'}`,
+      }, 502);
     }
 
     const upstreamText = await upstream.text();
@@ -112,31 +78,31 @@ export const POST: APIRoute = async ({ request, locals }) => {
     try {
       payload = upstreamText ? JSON.parse(upstreamText) : null;
     } catch {
-      console.error(
-        `guest-checkout upstream returned non-JSON (status ${upstream.status}):`,
-        upstreamText.slice(0, 500)
-      );
       return json({
         error: `checkout service returned non-JSON (${upstream.status}): ${upstreamText.slice(0, 200)}`,
       }, 502);
     }
 
     if (!upstream.ok) {
-      console.warn(`guest-checkout upstream ${upstream.status}:`, payload);
       return json(payload ?? { error: `checkout failed (${upstream.status})` }, upstream.status);
     }
 
     if (!payload?.clientSecret && !payload?.stub) {
-      console.error('guest-checkout upstream ok but missing clientSecret/stub:', payload);
       return json({ error: 'checkout service returned an incomplete response' }, 502);
     }
 
     return json(payload, 201);
   } catch (err: any) {
-    console.error('guest-checkout handler crashed:', err);
     return json({ error: `internal error: ${err?.message || 'unknown'}` }, 500);
   }
-};
+}
+
+function resolveAppBackendUrl(locals: any): string {
+  const fromImportMeta = (import.meta.env as any)?.APP_BACKEND_URL;
+  const fromRuntimeEnv = locals?.runtime?.env?.APP_BACKEND_URL;
+  const raw = fromImportMeta || fromRuntimeEnv || DEFAULT_APP_BACKEND_URL;
+  return String(raw).replace(/\/$/, '');
+}
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
