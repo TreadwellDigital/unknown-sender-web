@@ -42,9 +42,12 @@ const waitlistUrl =
   import.meta.env.PUBLIC_BREVO_WAITLIST_URL ||
   'https://aef6aabe.sibforms.com/serve/MUIFAEicZke5JZKVcRGwng2WuO5A9eg8MW4BviYPnH4Wpun9qnR-XSlLLrSiAFp7vqfmacZuLrPkO3UZFxzbh-34gGhpU1lEPqtGcudq-rw7XcZ53hd_s4w4SENvGkIBxKwRzKoK6SSHEj9mMjVUYHPOrXBL-trAnGQ1XNjmuzwqDjxLaYkZf-jnRntfxiKeC7RupGTqQM5m2ENRKg==';
 
-// Leaderboard: pass the app's UUID for this game to the client script.
+// Leaderboard + guest-checkout: pass the app's UUID for this game and
+// the API base URL to the client. `appBaseUrl` has a hardcoded fallback
+// because it isn't a secret and we don't want the flow to die if the
+// build env var doesn't propagate through Cloudflare.
 const appGameId = apiGame?.id ?? null;
-const appBaseUrl = import.meta.env.APP_BACKEND_URL ?? '';
+const appBaseUrl = (import.meta.env.APP_BACKEND_URL || 'https://api.unknownsender.co.uk').replace(/\/$/, '');
 
 // Stripe publishable key — safe to expose to the browser (Stripe.js loads
 // this to render the inline card form). The secret key lives on the game
@@ -360,11 +363,20 @@ const tiersHaveIds = bookingTiers.every((t) => t.id.length > 0);
         continueBtn.innerText = 'Setting up payment…';
 
         try {
-          // 1. Ask our server to provision the session + PaymentIntent.
-          const res = await fetch('/api/checkout', {
+          // 1. Ask the app backend to provision the session + PaymentIntent.
+          //    Direct browser call — CORS is configured on the app side for
+          //    both our origins; going through a Cloudflare Worker proxy
+          //    crashed the isolate when fetching to the sibling CF domain.
+          const res = await fetch(`${appBaseUrl}/web-api/games/purchase-guest`, {
             method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ gameId, tierId, teamName, displayName, email }),
+            headers: { 'content-type': 'application/json', accept: 'application/json' },
+            body: JSON.stringify({
+              gameId,
+              tierId,
+              teamNickname: teamName,
+              displayName,
+              email,
+            }),
           });
           const data = await res.json().catch(() => ({}));
 
