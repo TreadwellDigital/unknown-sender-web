@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
+  <meta name="supported-color-schemes" content="dark light">
+  <title>Message received — your Unknown Sender booking</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #0a0a0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f5f5f5;">
+
+  <!-- Inbox preview text (invisible in body, shown next to subject line) -->
+  <div style="display: none; font-size: 1px; line-height: 1px; max-height: 0; max-width: 0; opacity: 0; overflow: hidden; color: #0a0a0a;">
+    Team {{ params.teamName }} is booked for {{ params.gameName }}. Sign-in link inside.
+  </div>
+
+  <!-- Wrapper -->
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #0a0a0a;">
+    <tr>
+      <td align="center" style="padding: 40px 16px;">
+
+        <!-- Card -->
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="560" style="max-width: 560px; width: 100%; background-color: #131313; border: 1px solid #262626; border-radius: 8px;">
+
+          <!-- Brand — evidence tag logo -->
+          <tr>
+            <td style="padding: 32px 32px 0 32px;">
+              <img src="https://unknownsender.co.uk/logo-640.png"
+                   alt="Unknown Sender"
+                   width="140"
+                   style="display: block; width: 140px; height: auto; max-width: 140px;">
+            </td>
+          </tr>
+
+          <!-- Eyebrow -->
+          <tr>
+            <td style="padding: 24px 32px 0 32px;">
+              <div style="font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: #a3a3a3;">
+                Booking confirmed
+              </div>
+            </td>
+          </tr>
+
+          <!-- Headline -->
+          <tr>
+            <td style="padding: 12px 32px 0 32px;">
+              <h1 style="margin: 0; font-size: 32px; line-height: 1.1; letter-spacing: -0.02em; color: #ffffff; font-weight: 700;">
+                Message received.
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 24px 32px 0 32px;">
+              <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #d4d4d4;">
+                You're in. Team <strong style="color: #ffffff;">{{ params.teamName }}</strong> is booked for <strong style="color: #ffffff;">{{ params.gameName }}</strong>.
+              </p>
+              <p style="margin: 16px 0 0 0; font-size: 16px; line-height: 1.6; color: #d4d4d4;">
+                To start playing, open this link on the phone you'll be playing with. It opens straight into the Unknown Sender app — install it first from the App Store or Google Play if you haven't already.
+              </p>
+            </td>
+          </tr>
+
+          <!-- CTA button -->
+          <tr>
+            <td align="center" style="padding: 32px 32px 0 32px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" style="border-radius: 999px; background-color: #dc2626;">
+                    <a href="{{ params.magicLink }}"
+                       style="display: inline-block; padding: 16px 40px; font-size: 15px; font-weight: 700; letter-spacing: 0.02em; color: #ffffff; text-decoration: none; border-radius: 999px;">
+                      Open the game &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Expiry note -->
+          <tr>
+            <td align="center" style="padding: 16px 32px 0 32px;">
+              <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #a3a3a3; font-style: italic;">
+                The link expires in 15 minutes. If you miss the window, open the app and tap &ldquo;Sign in with email&rdquo; for a fresh one.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 32px 32px 0 32px;">
+              <div style="height: 1px; background-color: #262626; line-height: 1px; font-size: 1px;">&nbsp;</div>
+            </td>
+          </tr>
+
+          <!-- Before you set out -->
+          <tr>
+            <td style="padding: 24px 32px 0 32px;">
+              <div style="font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: #a3a3a3; margin-bottom: 16px;">
+                Before you set out
+              </div>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td style="padding: 6px 0; font-size: 15px; line-height: 1.5; color: #d4d4d4;">
+                    &bull;&nbsp;&nbsp;Install the <strong style="color: #ffffff;">Unknown Sender</strong> app for iOS or Android
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0; font-size: 15px; line-height: 1.5; color: #d4d4d4;">
+                    &bull;&nbsp;&nbsp;Skim the <a href="https://unknownsender.co.uk/player-manual" style="color: #ffffff; text-decoration: underline;">player manual</a> &mdash; two-minute read
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0; font-size: 15px; line-height: 1.5; color: #d4d4d4;">
+                    &bull;&nbsp;&nbsp;Read <a href="https://unknownsender.co.uk/before-you-play" style="color: #ffffff; text-decoration: underline;">Before you play</a> &mdash; kit, weather, safety
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0; font-size: 15px; line-height: 1.5; color: #d4d4d4;">
+                    &bull;&nbsp;&nbsp;You have <strong style="color: #ffffff;">90 days</strong> to play. No rush.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Support -->
+          <tr>
+            <td style="padding: 24px 32px 0 32px;">
+              <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #a3a3a3;">
+                Any problems? Message us on WhatsApp: <a href="https://wa.me/447428005847" style="color: #ffffff; text-decoration: underline;"><strong>+44 7428 005847</strong></a>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 32px 32px 32px 32px;">
+              <div style="height: 1px; background-color: #262626; line-height: 1px; font-size: 1px; margin-bottom: 24px;">&nbsp;</div>
+              <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #737373;">
+                Unknown Sender &middot; Treadwell21 Ltd &middot; 71-75 Shelton Street, Covent Garden, London, WC2H 9JQ &middot; Company no. 16996311
+              </p>
+              <p style="margin: 12px 0 0 0; font-size: 12px; line-height: 1.5; color: #737373;">
+                You&rsquo;re receiving this because you booked a game at <a href="https://unknownsender.co.uk" style="color: #a3a3a3; text-decoration: underline;">unknownsender.co.uk</a>.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
