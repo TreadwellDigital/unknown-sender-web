@@ -11,9 +11,11 @@ ageMin: 18
 validityDays: 90
 status: live
 order: 2
-# When bookings open. Delete this line (or set to a past date) to open
-# bookings immediately.
-bookingsOpenAt: 2026-09-28T09:00:00Z
+# Set to a past date (or delete) to open bookings. While it's in the
+# future, the game page shows the waitlist form instead of the booking
+# flow. Date doesn't display anywhere publicly — the copy just says
+# "Bookings open soon".
+bookingsOpenAt: 2099-01-01T00:00:00Z
 # Fallback price tiers — the live app catalogue overrides these at build
 # time if reachable. Keep in sync with what's set in Madison's admin.
 priceTiers:
@@ -29,6 +31,12 @@ priceTiers:
     label: Team of 5–6
     maxPlayers: 6
     pricePence: 9000
+# Content themes — shown on the game page so prospective players know what
+# they're in for. Keep each one short. Edit to match the actual content.
+themes:
+  - Bereavement
+  - Family secrets
+  - Inheritance disputes
 ---
 
 ## The case

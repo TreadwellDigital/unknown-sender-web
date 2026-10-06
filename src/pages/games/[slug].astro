@@ -161,6 +161,21 @@ const tiersHaveIds = bookingTiers.every((t) => t.id.length > 0);
       </section>
     )}
 
+    {game.data.themes && game.data.themes.length > 0 && (
+      <section class="themes wrap-narrow">
+        <div class="eyebrow">Themes &amp; content</div>
+        <p class="themes-note">
+          This game is suitable for ages {game.data.ageMin}+. It explores the following themes,
+          so you know what to expect before you book.
+        </p>
+        <ul class="themes-list">
+          {game.data.themes.map((theme) => (
+            <li class="theme-tag">{theme}</li>
+          ))}
+        </ul>
+      </section>
+    )}
+
     {bookingsOpen ? (
       <section class="booking wrap-narrow" id="book">
         <div class="eyebrow">Book</div>
@@ -235,12 +250,10 @@ const tiersHaveIds = bookingTiers.every((t) => t.id.length > 0);
         <div class="eyebrow">Waitlist</div>
         <h2>Get notified when bookings open.</h2>
 
-        {openDateFormatted && (
-          <p class="waitlist-note">
-            Bookings for {displayTitle} open <strong>{openDateFormatted}</strong>.
-            Drop your email and we&rsquo;ll message you the moment they do.
-          </p>
-        )}
+        <p class="waitlist-note">
+          Bookings for <strong>{displayTitle}</strong> open soon. Drop your email and
+          we&rsquo;ll message you the moment they do.
+        </p>
 
         <label class="field">
           <span>Your email</span>
@@ -592,6 +605,7 @@ const tiersHaveIds = bookingTiers.every((t) => t.id.length > 0);
     display: flex;
     align-items: flex-end;
     background: linear-gradient(180deg, rgba(5,5,5,0.55), rgba(5,5,5,0.35) 30%, rgba(5,5,5,0.95));
+    padding-top: 160px;    /* clear the absolute topbar/logo */
     padding-bottom: 40px;
   }
   .hero h1 {
@@ -662,6 +676,17 @@ const tiersHaveIds = bookingTiers.every((t) => t.id.length > 0);
     .hero-nav { display: none; } /* mobile uses the hamburger overlay */
     .hero-topbar { top: 24px; }
     .hero-logo img { height: 68px; }
+    .hero-overlay { padding-top: 120px; }
+  }
+
+  /* Landscape phones / short viewports */
+  @media (max-height: 500px) {
+    .hero-topbar { top: 16px; }
+    .hero-logo img { height: 52px; }
+    .hero-overlay { padding-top: 90px; padding-bottom: 24px; }
+    .hero h1 { font-size: clamp(1.8rem, 5vw, 3rem); margin-top: 10px; }
+    .tagline { font-size: 15px; margin-top: 12px; }
+    .hero-cta { margin-top: 18px; }
   }
 
   /* ---------- META ---------- */
@@ -723,6 +748,41 @@ const tiersHaveIds = bookingTiers.every((t) => t.id.length > 0);
     top: 0;
     color: var(--accent);
     font-size: 14px;
+  }
+
+  /* ---------- THEMES / CONTENT NOTE ---------- */
+  .themes { padding-block: 40px 20px; }
+  .themes .eyebrow {
+    display: block;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .themes-note {
+    margin: 0 0 20px;
+    color: var(--ink-dim);
+    font-size: 14.5px;
+    line-height: 1.6;
+    max-width: 560px;
+  }
+  .themes-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .theme-tag {
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    text-transform: uppercase;
   }
 
   /* ---------- EMBEDDED LEADERBOARD ---------- */

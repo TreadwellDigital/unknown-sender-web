@@ -10,6 +10,15 @@ import { formatPricePence } from '@/lib/pricing';
 // always leads.
 const games = (await getCollection('games'))
   .sort((a, b) => a.data.order - b.data.order);
+
+// Hero state: are ANY games actually bookable right now? (status=live
+// AND past the bookingsOpenAt date). If none are, the hero sells the
+// waitlist instead of bookings — eyebrow + primary CTA both switch.
+const now = new Date();
+const anyBookingsOpen = games.some((g) =>
+  g.data.status === 'live' &&
+  (!g.data.bookingsOpenAt || now >= new Date(g.data.bookingsOpenAt))
+);
 ---
 
 <BaseLayout
@@ -47,7 +56,7 @@ const games = (await getCollection('games'))
 
     <!-- Copy + CTAs pushed to bottom via margin-top: auto -->
     <div class="wrap hero-content">
-      <div class="eyebrow"><span class="dot"></span>Leeds &nbsp;/&nbsp; Live now</div>
+      <div class="eyebrow"><span class="dot"></span>Leeds &nbsp;/&nbsp; {anyBookingsOpen ? 'Live now' : 'Coming soon'}</div>
       <h1>A city.<br/>A case.<br/>A sender you can&rsquo;t trust.</h1>
       <p class="lede">
         A mystery delivered to your phone and played on foot across Leeds.
@@ -55,8 +64,10 @@ const games = (await getCollection('games'))
         runs out.
       </p>
       <div class="cta-row">
-        <a class="btn btn-primary" href="/games/last-call">Book Last Call</a>
-        <a class="btn btn-ghost" href="/games">View all case files</a>
+        <a class="btn btn-primary" href="/games">
+          {anyBookingsOpen ? 'Book a case' : 'Join the waitlist'} &rarr;
+        </a>
+        <a class="btn btn-ghost" href="/player-manual">How it works</a>
       </div>
     </div>
 
@@ -77,7 +88,14 @@ const games = (await getCollection('games'))
 
       <div class="explore-grid">
         {games.map((g) => {
+          const now = new Date();
           const isLive = g.data.status === 'live';
+          // Bookings only count as "open" if the game is live AND we're
+          // past its bookingsOpenAt (or no date was set). Otherwise show
+          // the waitlist state even for live games.
+          const bookingsOpen = isLive && (
+            !g.data.bookingsOpenAt || now >= new Date(g.data.bookingsOpenAt)
+          );
           const cheapest = isLive
             ? [...g.data.priceTiers].sort((a, b) => a.pricePence - b.pricePence)[0]
             : null;
@@ -94,13 +112,17 @@ const games = (await getCollection('games'))
                 </div>
                 <div class="feature-body">
                   <div class="feature-eye">
-                    <span class="live-dot"></span>{g.data.citySlug} &nbsp;/&nbsp; Live now
+                    <span class="live-dot"></span>{g.data.citySlug} &nbsp;/&nbsp; {bookingsOpen ? 'Live now' : 'Coming soon'}
                   </div>
                   <h3>{g.data.title}</h3>
                   <p class="feature-tag">{g.data.tagline}</p>
                   <div class="feature-meta">
-                    <span class="feature-price">From {formatPricePence(cheapest!.pricePence)}</span>
-                    <span class="feature-cta">Explore &rarr;</span>
+                    <span class="feature-price">
+                      {bookingsOpen
+                        ? <>From {formatPricePence(cheapest!.pricePence)}</>
+                        : 'Soon'}
+                    </span>
+                    <span class="feature-cta">{bookingsOpen ? 'Explore →' : 'Join waitlist →'}</span>
                   </div>
                 </div>
               </a>
@@ -219,11 +241,14 @@ const games = (await getCollection('games'))
   }
   .hero-nav a:hover { color: var(--ink); }
 
-  /* Content pushed to bottom by margin-top: auto in the flex column */
+  /* Content pushed to bottom by margin-top: auto in the flex column.
+     padding-top guarantees the headline clears the absolute topbar even
+     when the viewport is too short for margin-top: auto to do its job. */
   .hero-content {
     position: relative;
     z-index: 2;
     margin-top: auto;
+    padding-top: 180px;
     padding-bottom: 96px;
   }
 
@@ -285,10 +310,23 @@ const games = (await getCollection('games'))
     .hero-nav { display: none; } /* mobile uses the hamburger overlay */
     .hero-topbar { top: 28px; }
     .hero-logo img { height: 76px; }
-    .hero-content { padding-bottom: 80px; }
+    .hero-content { padding-top: 130px; padding-bottom: 80px; }
     .hero h1 { margin-top: 16px; }
     .hero .lede { margin-top: 20px; font-size: 16px; }
     .cta-row { margin-top: 28px; }
+  }
+
+  /* Landscape phones / short viewports — logo would otherwise eat the whole
+     visible area. Shrink the logo and tighten up vertical padding so the
+     headline still has room to breathe. */
+  @media (max-height: 500px) {
+    .hero-topbar { top: 20px; }
+    .hero-logo img { height: 56px; }
+    .hero-content { padding-top: 100px; padding-bottom: 56px; }
+    .hero h1 { margin-top: 10px; font-size: clamp(1.8rem, 5vw, 3rem); }
+    .hero .lede { margin-top: 14px; font-size: 15px; }
+    .cta-row { margin-top: 20px; }
+    .scroll-hint { display: none; }
   }
 
   /* ---------- EXPLORE ---------- */

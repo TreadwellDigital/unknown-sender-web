@@ -38,6 +38,11 @@ const games = defineCollection({
         })
       )
       .default([]),
+    // Short list of content themes so prospective players (and parents of
+    // 18-year-olds buying their first grown-up outing) know what they're
+    // getting into. Keep each entry 1–2 words. Shown on the game detail
+    // page under a "Themes" heading.
+    themes: z.array(z.string()).default([]),
   }),
 });
 

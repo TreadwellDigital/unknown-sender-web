@@ -15,7 +15,11 @@ order: 1
 # waitlist form; on/after it, the real Stripe booking flow. Change to
 # whatever launch moment you want — ISO 8601 in UTC, or a plain date.
 # Set to a past date (or delete this line) to open bookings immediately.
-bookingsOpenAt: 2026-09-07T09:00:00Z
+# Set to a past date (or delete) to open bookings. While it's in the
+# future, the game page shows the waitlist form instead of the booking
+# flow. Date doesn't display anywhere publicly — the copy just says
+# "Bookings open soon".
+bookingsOpenAt: 2099-01-01T00:00:00Z
 priceTiers:
   - id: team-2
     label: Team of 1–2
@@ -29,6 +33,13 @@ priceTiers:
     label: Team of 5–6
     maxPlayers: 6
     pricePence: 9000
+# Content themes — shown on the game page so prospective players know what
+# they're in for. Keep each one short. Edit to match the actual content.
+themes:
+  - Missing person
+  - Alcohol & nightlife
+  - Deception
+  - Implied violence
 ---
 
 ## The case
