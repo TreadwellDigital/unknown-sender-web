@@ -15,9 +15,12 @@ const city = await getEntry('cities', game.data.citySlug);
 
 // Overlay live app data on top of Markdown-owned fields.
 const catalogue = await fetchGamesCatalogue();
-const apiGame = catalogue.find(
-  (g) => g.siteId === game.slug || slugify(g.name) === game.slug
-);
+// Strict match on siteId only. We used to fall back to a fuzzy name
+// match if siteId was missing, but that can silently pick up the WRONG
+// game if the API has a typo'd or duplicate siteId — safer to show the
+// Markdown-only version in that case than to overlay the wrong game's
+// data on top of a page.
+const apiGame = catalogue.find((g) => g.siteId === game.slug);
 
 const displayTitle       = apiGame?.name ?? game.data.title;
 const displayDescription = apiGame?.description ?? game.data.summary;
@@ -88,7 +91,7 @@ const tiersHaveIds = bookingTiers.every((t) => t.id.length > 0);
 <BaseLayout
   title={`${displayTitle}, Unknown Sender`}
   description={game.data.tagline}
-  canonicalPath={`/games/${game.slug}`}
+  canonicalPath={`/${game.slug}`}
   ogImage={game.data.heroImageDesktop}
   bodyClass="hero-page"
 >
@@ -296,7 +299,7 @@ const tiersHaveIds = bookingTiers.every((t) => t.id.length > 0);
       <p id="lb-inline-empty" class="lb-state" hidden>No scores yet. Be the first.</p>
       <p id="lb-inline-error" class="lb-state" hidden>Could not load leaderboard.</p>
 
-      <a href={`/games/${game.slug}/leaderboard`} class="btn btn-ghost lb-view-full">
+      <a href={`/${game.slug}/leaderboard`} class="btn btn-ghost lb-view-full">
         View full leaderboard &rarr;
       </a>
     </section>

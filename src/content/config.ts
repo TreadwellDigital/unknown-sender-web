@@ -1,7 +1,8 @@
 import { defineCollection, z } from 'astro:content';
 
 /**
- * Games — one Markdown file per game. Renders /games/[slug].
+ * Games — one Markdown file per game. Renders /[slug] at the site root
+ * (e.g. /last-call). The old /games/[slug] URLs 301-redirect for compat.
  * Prices here are a fallback used when the app API is unreachable.
  * Once the app backend is live, price + availability are fetched from
  * GET /api/games/[slug] and overlaid on top of this metadata.

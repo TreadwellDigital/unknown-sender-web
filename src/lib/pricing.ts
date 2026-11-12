@@ -32,7 +32,7 @@ export interface LiveTier {
 export interface LiveGame {
   id: string;
   /**
-   * URL-safe identifier used by the site to match its route (`/games/last-call`)
+   * URL-safe identifier used by the site to match its route (`/last-call`)
    * to the app's game record. Optional: falls back to slugified name matching
    * if the app hasn't populated it yet.
    */

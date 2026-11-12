@@ -102,7 +102,7 @@ const anyBookingsOpen = games.some((g) =>
 
           if (isLive) {
             return (
-              <a class="feature" href={`/games/${g.slug}`}>
+              <a class="feature" href={`/${g.slug}`}>
                 <div class="feature-media">
                   <picture>
                     <source media="(min-width: 768px)" srcset={g.data.heroImageDesktop} />
